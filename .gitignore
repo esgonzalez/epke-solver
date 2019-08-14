@@ -1,3 +1,6 @@
+#### epke-run executable
+epke-run*
+
 ##### Windows
 # Windows thumbnail cache files
 Thumbs.db
@@ -177,6 +180,9 @@ secring.*
 **/CVS/*
 .cvsignore
 */.cvsignore
+
+#### Jupyter Notebook
+.ipynb_checkpoints
 
 ##### TortoiseGit
 # Project-level settings
