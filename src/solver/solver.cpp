@@ -7,10 +7,10 @@
 #include <sstream>
 
 Solver::Solver(
-  const timeBins<double> time, const timeBins<double> gen_time,
-  const timeBins<double> pow_norm, const timeBins<double> rho_imp,
-  const timeBins<double> beta_eff, const timeBins<double> lambda_h,
-  const precBins<Precursor::ptr> precursors)
+  const timeBins<double>& time, const timeBins<double>& gen_time,
+  const timeBins<double>& pow_norm, const timeBins<double>& rho_imp,
+  const timeBins<double>& beta_eff, const timeBins<double>& lambda_h,
+  const precBins<Precursor::ptr>& precursors)
     : time(time), gen_time(gen_time), pow_norm(pow_norm), rho_imp(rho_imp),
       beta_eff(beta_eff), lambda_h(lambda_h), precursors(precursors) {
 
@@ -33,37 +33,38 @@ Solver::Solver(
 }
 
 double Solver::computeOmega( const uint8_t k, const uint32_t n ) const {
-  auto beta_eff_k = precursors.at(k)->delayedFraction();
-  auto lambda_k = precursors.at(k)->decayConstant();
-  return gen_time.at(0) / gen_time.at(n) * beta_eff_k.at(n) * w
-         * ( k2( lambda_k.at(n), delta_t.at(n) ) + gamma * delta_t.at(n)
-         * k1( lambda_k.at(n), delta_t.at(n) ) ) / ( (1 + gamma)
+  const auto beta_eff_k = &precursors.at(k)->delayedFraction();
+  const auto lambda_k = &precursors.at(k)->decayConstant();
+  return gen_time.at(0) / gen_time.at(n) * beta_eff_k->at(n) * w
+         * ( k2( lambda_k->at(n), delta_t.at(n) ) + gamma * delta_t.at(n)
+         * k1( lambda_k->at(n), delta_t.at(n) ) ) / ( (1 + gamma)
          * delta_t.at(n) * delta_t.at(n) );
 }
 
 double Solver::computeZetaHat( const uint8_t k, const uint32_t n ) const {
+  const auto beta_eff_k = &precursors.at(k)->delayedFraction();
+  const auto lambda_k = &precursors.at(k)->decayConstant();
   double beta_prev_prev, power_prev_prev, gen_time_prev_prev;
-  auto beta_eff_k = precursors.at(k)->delayedFraction();
-  auto lambda_k = precursors.at(k)->decayConstant();
+
   if (n < 2) {
-    beta_prev_prev = beta_eff_k.at(n-1);
+    beta_prev_prev = beta_eff_k->at(n-1);
     power_prev_prev = power.at(n-1);
     gen_time_prev_prev = gen_time.at(n-1);
   }
   else {
-    beta_prev_prev = beta_eff_k.at(n-2);
+    beta_prev_prev = beta_eff_k->at(n-2);
     power_prev_prev = power.at(n-2);
     gen_time_prev_prev = gen_time.at(n-2);
   }
   return w * concentrations.at(k).at(n-1) + w * gen_time.at(0) * power.at(n-1)
-         * beta_eff_k.at(n-1) / gen_time.at(n-1)
-         * ( k0(lambda_k.at(n), delta_t.at(n))
-         - ( k2( lambda_k.at(n), delta_t.at(n) ) - delta_t.at(n) * (gamma - 1)
-         * k1( lambda_k.at(n), delta_t.at(n) ) ) / ( gamma * delta_t.at(n)
+         * beta_eff_k->at(n-1) / gen_time.at(n-1)
+         * ( k0(lambda_k->at(n), delta_t.at(n))
+         - ( k2( lambda_k->at(n), delta_t.at(n) ) - delta_t.at(n) * (gamma - 1)
+         * k1( lambda_k->at(n), delta_t.at(n) ) ) / ( gamma * delta_t.at(n)
          * delta_t.at(n) ) ) + w * gen_time.at(0) * power_prev_prev
          * beta_prev_prev / gen_time_prev_prev
-         * (k2(lambda_k.at(n), delta_t.at(n))
-         - delta_t.at(n) * k1(lambda_k.at(n), delta_t.at(n)) ) / ( (1 + gamma)
+         * (k2(lambda_k->at(n), delta_t.at(n))
+         - delta_t.at(n) * k1(lambda_k->at(n), delta_t.at(n)) ) / ( (1 + gamma)
          * gamma * delta_t.at(n) * delta_t.at(n) );
 }
 
@@ -73,10 +74,10 @@ void Solver::computeA1B1(
 
   // we have to set these values so we don't get an out of range vector
   if (n < 2) {
-    H_prev_prev = H[n-1];
+    H_prev_prev = H.at(n-1);
   }
   else {
-    H_prev_prev = H[n-2];
+    H_prev_prev = H.at(n-2);
   }
   a1 = gamma_d * pow_norm.at(n) / E(lambda_h.at(n), delta_t.at(n))
        * ( k2(lambda_h.at(n), delta_t.at(n)) + k1(lambda_h.at(n), delta_t.at(n))
@@ -94,19 +95,19 @@ void Solver::computeA1B1(
 }
 
 double Solver::computePower(
-    const uint32_t n, const double theta, const double gamma_d,
-    const double eta ) {
+    const uint32_t& n, const double& theta, const double& gamma_d,
+    const double& eta ) {
   for (int k=0; k<precursors.size(); k++) {
     w = 1 / E( precursors.at(k)->decayConstant().at(n), delta_t.at(n) );
-    auto decay_constant = precursors.at(k)->decayConstant();
+    const auto decay_constant = &precursors.at(k)->decayConstant();
 
     omega[k] = computeOmega(k, n);
     zeta_hat[k] = computeZetaHat(k, n);
 
     // accumulate the weighted sum
-    tau += decay_constant.at(n) * omega.at(k);
-    s_hat_d += decay_constant.at(n) * zeta_hat.at(k);
-    s_d_prev += decay_constant.at(n-1) * concentrations.at(k).at(n-1);
+    tau += decay_constant->at(n) * omega.at(k);
+    s_hat_d += decay_constant->at(n) * zeta_hat.at(k);
+    s_d_prev += decay_constant->at(n-1) * concentrations.at(k).at(n-1);
   }
 
   computeA1B1(n, gamma_d, eta);
@@ -138,14 +139,19 @@ double Solver::computeABC( const uint32_t n, const double theta ) const {
 
 // returns true if the transformation criterion is met
 bool Solver::acceptTransformation( const uint32_t n ) const {
-  if (n<2) {
-    return true;
+  double power_prev_prev;
+
+  if (n < 2) {
+    power_prev_prev = power.at(n-1);
+  }
+  else {
+    power_prev_prev = power.at(n-2);
   }
 
   double lhs = fabs(power.at(n) - exp(alpha * delta_t.at(n))
                * power.at(n-1));
   double rhs = fabs(power.at(n) - power.at(n-1) - (power.at(n-1)
-               - power.at(n-2)) / gamma );
+               - power_prev_prev) / gamma );
   return lhs <= rhs;
 }
 
@@ -203,17 +209,21 @@ void Solver::buildXMLDoc( pugi::xml_document& doc ) const {
   pugi::xml_node output_node = doc.append_child("epke_output");
   pugi::xml_node time_node = output_node.append_child( "time" );
   pugi::xml_node power_node = output_node.append_child( "power" );
-  std::ostringstream time_str, power_str;
+  pugi::xml_node rho_node = output_node.append_child( "rho" );
+  std::ostringstream time_str, power_str, rho_str;
 
   for ( int n=0; n<time.size(); n++ ) {
     time_str << std::setprecision(6) << time.at(n);
-    power_str << std::setprecision(12) << power.at(n);
+    power_str << std::setprecision(12) << H.at(n);
+    rho_str << std::setprecision(12) << rho.at(n);
     if ( n != time.size() - 1 ) {
       time_str << ", ";
       power_str<< ", ";
+      rho_str << ", ";
     }
   }
 
   time_node.append_attribute( "values" ) = time_str.str().c_str();
   power_node.append_attribute( "values" ) = power_str.str().c_str();
+  rho_node.append_attribute( "values" ) = rho_str.str().c_str();
 }

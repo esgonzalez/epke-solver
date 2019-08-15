@@ -56,7 +56,7 @@ void Input::execute() {
   doc.save( out );
 }
 
-std::vector<double> Input::loadVectorData( pugi::xml_node node ) {
+const std::vector<double> Input::loadVectorData( const pugi::xml_node &node ) {
   std::vector<double> result;
   std::istringstream iss(node.text().get());
   for (double s; iss >> s;) {
@@ -65,8 +65,8 @@ std::vector<double> Input::loadVectorData( pugi::xml_node node ) {
   return result;
 }
 
-std::vector<Precursor::ptr> Input::loadPrecursors(
-    pugi::xml_node precursors_node, uint32_t n_steps ) {
+std::vector<Precursor::ptr> const Input::loadPrecursors(
+    const pugi::xml_node &precursors_node, const uint32_t n_steps ) {
   std::vector<Precursor::ptr> precursors;
   for (auto precursor_node : precursors_node.children() ) {
     timeBins<double> decay_constant = std::vector<double>(

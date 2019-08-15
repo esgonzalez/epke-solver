@@ -10,9 +10,9 @@ class Input {
 private:
   std::string input_file_name;
 
-  std::vector<double> loadVectorData( pugi::xml_node node );
-  std::vector<Precursor::ptr> loadPrecursors(
-    pugi::xml_node precursors_node, uint32_t n_steps );
+  std::vector<double> const loadVectorData( const pugi::xml_node &node );
+  std::vector<Precursor::ptr> const loadPrecursors(
+    const pugi::xml_node &precursors_node, const uint32_t n_steps );
 public:
   Input(std::string input_file_name) : input_file_name(input_file_name) {}
 

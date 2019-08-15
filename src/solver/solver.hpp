@@ -35,18 +35,18 @@ private:
   double computeOmega( const uint8_t k, const uint32_t n ) const;
   double computeZetaHat( const uint8_t k, const uint32_t n ) const;
   double computePower(
-    const uint32_t n, const double theta, const double gamma_d,
-    const double eta );
+    const uint32_t& n, const double& theta, const double& gamma_d,
+    const double& eta );
   double computeABC( const uint32_t n, const double theta ) const;
   void computeA1B1( const uint32_t n, const double gamma_d, const double eta );
   bool acceptTransformation( const uint32_t n ) const;
 
 public:
   Solver(
-    const timeBins<double> time, const timeBins<double> gen_time,
-    const timeBins<double> pow_norm, const timeBins<double> rho_imp,
-    const timeBins<double> beta_eff, const timeBins<double> lambda_h,
-    const precBins<Precursor::ptr> precursors );
+    const timeBins<double>& time, const timeBins<double>& gen_time,
+    const timeBins<double>& pow_norm, const timeBins<double>& rho_imp,
+    const timeBins<double>& beta_eff, const timeBins<double>& lambda_h,
+    const precBins<Precursor::ptr>& precursors );
 
   void solve(
     const double theta, const double gamma_d, const double init_pow,

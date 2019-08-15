@@ -12,12 +12,11 @@ double k0( const double lambda, const double delta_t ) {
 }
 
 double k1( const double lambda, const double delta_t ) {
-  return (delta_t * E(lambda, delta_t) - k0(lambda, delta_t)) / lambda;
+  return  0.5 * delta_t * delta_t * E(lambda, delta_t);
 }
 
 double k2( const double lambda, const double delta_t ) {
-  return (delta_t * delta_t *  E(lambda, delta_t) - 2 * k1(lambda, delta_t))
-         / lambda;
+  return delta_t * delta_t * delta_t *  E(lambda, delta_t) / 3;
 }
 
 #endif

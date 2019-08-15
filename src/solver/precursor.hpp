@@ -13,13 +13,13 @@ private:
 public:
   typedef std::shared_ptr<Precursor> ptr;
   Precursor(
-    const timeBins<double> decay_constant,
-    const timeBins<double> delayed_fraction )
+    const timeBins<double>& decay_constant,
+    const timeBins<double>& delayed_fraction )
     : decay_constant(decay_constant), delayed_fraction(delayed_fraction) {}
 
   // accessors
-  timeBins<double> decayConstant() const { return decay_constant; }
-  timeBins<double> delayedFraction() const { return delayed_fraction; }
+  const timeBins<double> &decayConstant() const { return decay_constant; }
+  const timeBins<double> &delayedFraction() const { return delayed_fraction; }
 };
 
 #endif
