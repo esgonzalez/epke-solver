@@ -3,12 +3,14 @@
 
 #include "precursor.hpp"
 #include "pugixml.hpp"
+#include "solver.hpp"
 
 #include <string>
 
 class Input {
 private:
   std::string input_file_name;
+  Solver::TimeIndex n_steps;
 
   std::vector<double> const loadVectorData( const pugi::xml_node &node );
   std::vector<Precursor::ptr> const loadPrecursors(
