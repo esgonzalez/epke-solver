@@ -12,9 +12,14 @@ private:
   std::string input_file_name;
   Solver::TimeIndex n_steps;
 
-  std::vector<double> const loadVectorData( const pugi::xml_node &node );
+  std::vector<double> const loadVectorData(const pugi::xml_node& node);
+
   std::vector<Precursor::ptr> const loadPrecursors(
-    const pugi::xml_node &precursors_node, const uint32_t n_steps );
+      const pugi::xml_node& precursors_node, const Solver::TimeIndex n_steps);
+
+  const Solver::precBins<Solver::timeBins> loadConcentrationHistories(
+      const pugi::xml_node& concentrations_node);
+
 public:
   Input(std::string input_file_name) : input_file_name(input_file_name) {}
 

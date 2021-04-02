@@ -21,28 +21,32 @@ void Input::execute() {
 
   n_steps = epke_node.attribute("n_steps").as_int();
 
-  timeBins<double> time     = loadVectorData(epke_node.child("time"));
-  timeBins<double> rho_imp  = loadVectorData(epke_node.child("rho_imp"));
+  timeBins<double> time = loadVectorData(epke_node.child("time"));
+  timeBins<double> rho_imp = loadVectorData(epke_node.child("rho_imp"));
   timeBins<double> gen_time = loadVectorData(epke_node.child("gen_time"));
   timeBins<double> pow_norm = loadVectorData(epke_node.child("pow_norm"));
   timeBins<double> beta_eff = loadVectorData(epke_node.child("beta_eff"));
   timeBins<double> lambda_h = loadVectorData(epke_node.child("lambda_h"));
+  timeBins<double> p_history = loadVectorData(epke_node.child("p_history"));
 
   Solver::precBins<Precursor::ptr> precursors =
       loadPrecursors(epke_node.child("precursors"), time.size());
 
+  Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
+      epke_node.child("concentration_histories"));
+
   Solver solver(
-      time, gen_time, pow_norm, rho_imp, beta_eff, lambda_h, precursors);
+      time, gen_time, pow_norm, rho_imp, beta_eff, lambda_h, p_history,
+      precursors, concentration_histories);
 
   double theta = epke_node.attribute("theta").as_double();
   double gamma_d = epke_node.attribute("gamma_d").as_double();
-  double init_pow = epke_node.attribute("initial_power").as_double();
   double eta = epke_node.attribute("eta").as_double();
 
-  solver.solve(theta, gamma_d, init_pow, eta);
+  solver.solve(theta, gamma_d, eta);
 
   // build the xml document
-  std::string outpath = "examples/epke_output.xml";
+  std::string outpath = epke_node.attribute("outpath").value();
   std::ofstream out(outpath);
   pugi::xml_document doc;
   solver.buildXMLDoc(doc);
@@ -79,4 +83,23 @@ std::vector<Precursor::ptr> const Input::loadPrecursors(
     precursors.push_back(std::make_shared<Precursor>(decay_constant, beta));
   }
   return precursors;
+}
+
+const Solver::precBins<Solver::timeBins> Input::loadConcentrationHistories(
+    const pugi::xml_node& concentrations_node) {
+
+  Solver::precBins<Solver::timeBins> concentration_histories;
+
+  for (auto history_node : concentrations_node.children()) {
+    std::vector<double> concentration_history;
+
+    std::istringstream iss(history_node.text().get());
+    for (double s; iss >> s;) {
+     concentration_history.push_back(s);
+    }
+
+    concentration_histories.push_back(concentration_history);
+  }
+
+  return concentration_histories;
 }
