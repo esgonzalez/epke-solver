@@ -6,6 +6,7 @@
 #include "input.hpp"
 
 #include "parareal.hpp"
+#include "solver_parameters.hpp"
 
 void Input::execute() {
   pugi::xml_document input_file;
@@ -37,6 +38,9 @@ void Input::execute() {
   Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
       epke_node.child("concentration_histories"));
 
+  EPKEParameters epke_parameters(time, gen_time, pow_norm, rho_imp,
+				 beta_eff, lambda_h, precursors);
+  
   Solver solver(time, gen_time, pow_norm, rho_imp,
 		beta_eff, lambda_h, precursors);
 
