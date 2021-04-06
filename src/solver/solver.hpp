@@ -3,6 +3,7 @@
 
 #include "precursor.hpp"
 #include "pugixml.hpp"
+#include "solver_parameters.hpp"
 
 #include <vector>
 
@@ -59,12 +60,15 @@ public:
   Solver(
       const timeBins& time, const timeBins& gen_time, const timeBins& pow_norm,
       const timeBins& rho_imp, const timeBins& beta_eff,
-      const timeBins& lambda_h, const timeBins& p_history,
-      const precBins<Precursor::ptr>& precursors,
-      const precBins<timeBins>& concentration_histories);
+      const timeBins& lambda_h, const precBins<Precursor::ptr>& precursors);
 
+  // Set values that have been precomputed (for the parareal solver) so the
+  // simulation does not have to begin at t=0
+  void setPrecomputedValues(const timeBins& p_history,
+			    const precBins<timeBins>& concentration_histories);
+  
   void solve(const double theta, const double gamma_d, const double eta);
-
+  
   void buildXMLDoc(pugi::xml_document& doc) const;
 };
 

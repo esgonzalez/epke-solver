@@ -1,9 +1,11 @@
-#include "input.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
+#include "input.hpp"
+
+#include "parareal.hpp"
 
 void Input::execute() {
   pugi::xml_document input_file;
@@ -35,14 +37,18 @@ void Input::execute() {
   Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
       epke_node.child("concentration_histories"));
 
-  Solver solver(
-      time, gen_time, pow_norm, rho_imp, beta_eff, lambda_h, p_history,
-      precursors, concentration_histories);
+  Solver solver(time, gen_time, pow_norm, rho_imp,
+		beta_eff, lambda_h, precursors);
 
+  // Set the precomputed values if the simulation doesn't start at t=0
+  solver.setPrecomputedValues(p_history, concentration_histories);
+
+  // Grab additional simulation parameters
   double theta = epke_node.attribute("theta").as_double();
   double gamma_d = epke_node.attribute("gamma_d").as_double();
   double eta = epke_node.attribute("eta").as_double();
 
+  // Run the EPKE solver
   solver.solve(theta, gamma_d, eta);
 
   // build the xml document

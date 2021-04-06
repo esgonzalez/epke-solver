@@ -6,7 +6,6 @@ protected:
   template <typename T>
   using precBins = std::vector<T>;      // binning over precursor groups
   using timeBins = std::vector<double>; // binning over time variable
-  using precBins = std::vector<Precursor::ptr>;
   using timeIndex = uint32_t;
   using precIndex = uint8_t;
 };
@@ -20,7 +19,10 @@ private:
   const precBins<Precursor::ptr> _precursors;
   
 public:
-  EPKEParameters()
+  EPKEParameters(const timeBins& gen_time,
+		 const timeBins& lambda_h,
+		 const timeBins& pow_norm,
+		 const precBins<Precursor::ptr> precursors)
     : SolverParameters(),
       _gen_time(gen_time),
       _lambda_h(lambda_h),

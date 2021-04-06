@@ -9,10 +9,9 @@
 Solver::Solver(
     const timeBins& time, const timeBins& gen_time, const timeBins& pow_norm,
     const timeBins& rho_imp, const timeBins& beta_eff, const timeBins& lambda_h,
-    const timeBins& p_history, const precBins<Precursor::ptr>& precursors,
-    const precBins<timeBins>& concentration_histories)
+    const precBins<Precursor::ptr>& precursors)
     : time(time), gen_time(gen_time), pow_norm(pow_norm), rho_imp(rho_imp),
-      beta_eff(beta_eff), lambda_h(lambda_h), p_history(p_history),
+      beta_eff(beta_eff), lambda_h(lambda_h),
       precursors(precursors), delta_t(time.size()), power(time.size()),
       rho(time.size()), rho_d(time.size()), omega(precursors.size()),
       zeta_hat(precursors.size()),
@@ -24,10 +23,15 @@ Solver::Solver(
   }
   delta_t[time.size() - 1] =
       time.at(time.size() - 1) - time.at(time.size() - 2);
+}
 
+void Solver::setPrecomputedValues(const timeBins& power_history,
+				  const precBins<timeBins>& zeta_histories) {
+  p_history = power_history;
+  
   for (int k = 0; k < precursors.size(); k++) {
     for (int n = 0; n < p_history.size(); n++) {
-      concentrations[k][n] = concentration_histories[k][n];
+      concentrations[k][n] = zeta_histories[k][n];
     }
   }
 
