@@ -1,5 +1,5 @@
-#ifndef _EPKE_PRECURSOR_HEADER_
-#define _EPKE_PRECURSOR_HEADER_
+#ifndef _PARAREAL_PRECURSOR_HEADER_
+#define _PARAREAL_PRECURSOR_HEADER_
 
 #include <memory>
 #include <vector>

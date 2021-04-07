@@ -1,5 +1,5 @@
-#ifndef _EPKE_UTILITY_HEADER_
-#define _EPKE_UTILITY_HEADER_
+#ifndef _UTILITY_INTERPOLATE_HEADER_
+#define _UTILITY_INTERPOLATE_HEADER_
 
 #include <cmath>
 

@@ -5,8 +5,8 @@
 
 #include "input.hpp"
 
-#include "parareal.hpp"
-#include "solver_parameters.hpp"
+#include "parareal/parareal.hpp"
+#include "parareal/solver_parameters.hpp"
 
 void Input::execute() {
   pugi::xml_document input_file;

@@ -1,9 +1,9 @@
-#ifndef _EPKE_SOLVER_HEADER_
-#define _EPKE_SOLVER_HEADER_
+#ifndef _EPKE_EPKE_SOLVER_HEADER_
+#define _EPKE_EPKE_SOLVER_HEADER_
 
-#include "precursor.hpp"
-#include "pugixml.hpp"
-#include "solver_parameters.hpp"
+#include "parareal/precursor.hpp"
+#include "parareal/solver_parameters.hpp"
+#include "pugi/pugixml.hpp"
 
 #include <vector>
 

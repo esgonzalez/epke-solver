@@ -1,11 +1,11 @@
 exec       = epke-run
 cc         = g++
 opt        = -g
-modules    = pugi solver
+modules    = pugi parareal epke utility
 source_dir = $(addprefix src/,$(modules))
 build_dir  = $(addprefix build/src/,$(modules))
 test_dir   = build/test/
-cflags     = -std=c++17 $(opt) $(foreach sdir,$(source_dir), -I $(sdir))
+cflags     = -std=c++17 $(opt) -I src/
 main       = src/main.cpp
 
 source     = $(foreach sdir,$(source_dir),$(filter-out $(main), $(wildcard $(sdir)/*.cpp)))

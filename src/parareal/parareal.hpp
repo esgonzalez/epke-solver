@@ -1,7 +1,7 @@
 #ifndef _PARAREAL_PARAREAL_HEADER_
 #define _PARAREAL_PARAREAL_HEADER_
 
-#include "solver_parameters.hpp"
+#include "parareal/solver_parameters.hpp"
 
 // TODO: Write the solver base class and make the EPKE solver a derived class
 //#include "solver.hpp"

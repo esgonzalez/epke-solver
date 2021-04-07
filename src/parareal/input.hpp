@@ -1,9 +1,9 @@
-#ifndef _EPKE_INPUT_HEADER_
-#define _EPKE_INPUT_HEADER_
+#ifndef _PARAREAL_INPUT_HEADER_
+#define _PARAREAL_INPUT_HEADER_
 
-#include "precursor.hpp"
-#include "pugixml.hpp"
-#include "solver.hpp"
+#include "parareal/precursor.hpp"
+#include "pugi/pugixml.hpp"
+#include "epke/epke_solver.hpp"
 
 #include <string>
 

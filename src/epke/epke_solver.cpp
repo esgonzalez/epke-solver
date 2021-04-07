@@ -1,10 +1,10 @@
-#include "solver.hpp"
-#include "utility.hpp"
-
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
+#include "epke_solver.hpp"
+#include "utility/interpolate.hpp"
 
 Solver::Solver(
     const timeBins& time, const timeBins& gen_time, const timeBins& pow_norm,

@@ -1,4 +1,4 @@
-#include "input.hpp"
+#include "parareal/input.hpp"
 
 int main( int argc , char *argv[] ) {
   // read the command line
