@@ -11,7 +11,12 @@ double interpolate(std::vector<double> &x, std::vector<double> &y, double x_val)
    int i = 0;
 
    // find the index of the lower-bound x-value in the x-vector
-   x_val >= x[size - 2] ? i = size - 2 : while (x_val > x[i+1]) i++;
+   if (x_val >= x[size - 2]) {
+     i = size - 2;
+   }
+   else {
+     while (x_val > x[i+1]) { i++; }
+   };
    
    // interpolation points
    double a = x[i], ya = y[i], b = x[i+1], yb = y[i+1];
@@ -19,7 +24,7 @@ double interpolate(std::vector<double> &x, std::vector<double> &y, double x_val)
    // slope
    double t = ( yb - ya ) / ( b - a );
 
-   return ya + t * ( x - a );
+   return ya + t * ( x_val - a );
 }
 
 std::vector<double> interpolate(std::vector<double> &x,
@@ -42,7 +47,7 @@ std::vector<double> linspace(T start_in, T end_in, int n_steps) {
 
   double start = static_cast<double>(start_in);
   double end = static_cast<double>(end_in);
-  double num = static_cast<double>(num_in);
+  double num = static_cast<double>(n_steps);
 
   if (num == 0) { return linspaced; }
   if (num == 1) 
