@@ -7,9 +7,11 @@
 //#include "solver.hpp"
 
 class Parareal {
+public:
+  using TimeBins  = std::vector<double>; // binning over time variable
+  using TimeIndex = uint32_t;
+
 private:
-  using timeBins = std::vector<double>; // binning over time variable
-  
   // Max number of parareal iterations
   int _K;
 
@@ -17,8 +19,8 @@ private:
   int _n_fine_per_coarse;
 
   // Time dependent solution on the coarse time grid
-  timeBins _coarse_time;
-  timeBins _coarse_solution;
+  TimeBins _coarse_time;
+  TimeBins _coarse_solution;
 
   // Time dependent solver parameters on the coarse time grid. These will be
   // interpolated for the fine solver
@@ -28,8 +30,8 @@ private:
   //Solver _fine_solver;
   
 public:
-  Parareal(timeBins coarse_time,
-	   timeBins coarse_solution,
+  Parareal(TimeBins coarse_time,
+	   TimeBins coarse_solution,
 	   int K,
 	   int n_fine_per_coarse)
     : _coarse_time(coarse_time),
@@ -37,8 +39,11 @@ public:
       _K(K),
       _n_fine_per_coarse(n_fine_per_coarse) {}
 
+  // Generate fine time
+  TimeBins generateFineTime(TimeIndex n);
+  
   // Update the coarse solution with a parareal iteration
-  timeBins update_coarse_solution();
+  TimeBins update_coarse_solution();
   
 };
 

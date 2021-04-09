@@ -4,7 +4,9 @@
 #include <cmath>
 #include <vector>
 
-double interpolate(std::vector<double> &x, std::vector<double> &y, double x_val)
+inline double interpolate(std::vector<double> &x,
+			  std::vector<double> &y,
+			  double x_val)
 {
    int size = x.size();
 
@@ -27,9 +29,9 @@ double interpolate(std::vector<double> &x, std::vector<double> &y, double x_val)
    return ya + t * ( x_val - a );
 }
 
-std::vector<double> interpolate(std::vector<double> &x,
-				std::vector<double> &y,
-				std::vector<double> &x_new) {
+inline std::vector<double> interpolate(std::vector<double> &x,
+				       std::vector<double> &y,
+				       std::vector<double> &x_new) {
   std::vector<double> y_new;
 
   for (const auto& x_val : x_new) {
@@ -38,8 +40,6 @@ std::vector<double> interpolate(std::vector<double> &x,
 
   return y_new;
 }
-
-
 
 template<typename T>
 std::vector<double> linspace(T start_in, T end_in, int n_steps) {
@@ -68,19 +68,19 @@ std::vector<double> linspace(T start_in, T end_in, int n_steps) {
   
 }
 
-double E( const double lambda, const double delta_t ) {
+inline double E( const double lambda, const double delta_t ) {
   return exp(lambda * delta_t);
 }
 
-double k0( const double lambda, const double delta_t ) {
+inline double k0( const double lambda, const double delta_t ) {
   return (E(lambda, delta_t) - 1) / lambda;
 }
 
-double k1( const double lambda, const double delta_t ) {
+inline double k1( const double lambda, const double delta_t ) {
   return  0.5 * delta_t * delta_t * E(lambda, delta_t);
 }
 
-double k2( const double lambda, const double delta_t ) {
+inline double k2( const double lambda, const double delta_t ) {
   return delta_t * delta_t * delta_t *  E(lambda, delta_t) / 3;
 }
 

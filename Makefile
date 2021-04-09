@@ -44,7 +44,7 @@ $(exec) : $(main)
 
 $(test_exec) : $(test_main)
 	@ rm -f $(test_exec)
-	@ $(cc) $(cflags) -I test/ $(test_objects) $< -o $@
+	@ $(cc) $(cflags) -I test/ $(objects) $(test_objects) $< -o $@
 	@ ./$(test_exec)
 
 clean :

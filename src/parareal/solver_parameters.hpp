@@ -1,6 +1,10 @@
 #ifndef _PARAREAL_SOLVER_PARAMETERS_HEADER_
 #define _PARAREAL_SOLVER_PARAMETERS_HEADER_
 
+#include <vector>
+
+#include "parareal/precursor.hpp"
+
 class SolverParameters {
 protected:
   template <typename T>
