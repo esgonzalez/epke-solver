@@ -46,9 +46,9 @@ const double Solver::computeOmega(
   const auto beta_eff_k = &precursors.at(k)->delayedFraction();
   const auto lambda_k = &precursors.at(k)->decayConstant();
   return gen_time.at(0) / gen_time.at(n) * beta_eff_k->at(n) * w *
-         (k2(lambda_k->at(n), delta_t.at(n)) +
-          gamma * delta_t.at(n) * k1(lambda_k->at(n), delta_t.at(n))) /
-         ((1 + gamma) * delta_t.at(n) * delta_t.at(n));
+    (util::k2(lambda_k->at(n), delta_t.at(n)) +
+     gamma * delta_t.at(n) * util::k1(lambda_k->at(n), delta_t.at(n))) /
+    ((1 + gamma) * delta_t.at(n) * delta_t.at(n));
 }
 
 const double Solver::computeZetaHat(
@@ -69,18 +69,18 @@ const double Solver::computeZetaHat(
   }
 
   return w * concentrations.at(k).at(n - 1) +
-         w * gen_time.at(0) * power.at(n - 1) * beta_eff_k->at(n - 1) /
-             gen_time.at(n - 1) *
-             (k0(lambda_k->at(n), delta_t.at(n)) -
-              (k2(lambda_k->at(n), delta_t.at(n)) -
-               delta_t.at(n) * (gamma - 1) *
-                   k1(lambda_k->at(n), delta_t.at(n))) /
-                  (gamma * delta_t.at(n) * delta_t.at(n))) +
-         w * gen_time.at(0) * power_prev_prev * beta_prev_prev /
-             gen_time_prev_prev *
-             (k2(lambda_k->at(n), delta_t.at(n)) -
-              delta_t.at(n) * k1(lambda_k->at(n), delta_t.at(n))) /
-             ((1 + gamma) * gamma * delta_t.at(n) * delta_t.at(n));
+    w * gen_time.at(0) * power.at(n - 1) * beta_eff_k->at(n - 1) /
+    gen_time.at(n - 1) *
+    (util::k0(lambda_k->at(n), delta_t.at(n)) -
+     (util::k2(lambda_k->at(n), delta_t.at(n)) -
+      delta_t.at(n) * (gamma - 1) *
+      util::k1(lambda_k->at(n), delta_t.at(n))) /
+     (gamma * delta_t.at(n) * delta_t.at(n))) +
+    w * gen_time.at(0) * power_prev_prev * beta_prev_prev /
+    gen_time_prev_prev *
+    (util::k2(lambda_k->at(n), delta_t.at(n)) -
+     delta_t.at(n) * util::k1(lambda_k->at(n), delta_t.at(n))) /
+    ((1 + gamma) * gamma * delta_t.at(n) * delta_t.at(n));
 }
 
 std::pair<double, double> Solver::computeA1B1(
@@ -99,24 +99,24 @@ std::pair<double, double> Solver::computeA1B1(
   double lambda_h_n = lambda_h.at(n);
   double delta_t_n = delta_t.at(n);
 
-  double a1 = gamma_d * pow_norm.at(n) / E(lambda_h_n, delta_t_n) *
-              (k2(lambda_h_n, delta_t_n) +
-               k1(lambda_h_n, delta_t_n) * gamma * delta_t_n) /
-              ((1 + gamma) * delta_t_n * delta_t_n);
+  double a1 = gamma_d * pow_norm.at(n) / util::E(lambda_h_n, delta_t_n) *
+    (util::k2(lambda_h_n, delta_t_n) +
+     util::k1(lambda_h_n, delta_t_n) * gamma * delta_t_n) /
+    ((1 + gamma) * delta_t_n * delta_t_n);
   double b1 = rho_imp.at(n) +
-              1 / E(lambda_h_n, delta_t_n) *
-                  (rho_d.at(n - 1) -
-                   power.at(0) * gamma_d * eta * k0(lambda_h_n, delta_t_n)) +
-              gamma_d / E(lambda_h_n, delta_t_n) *
-                  (pow_norm.at(n - 1) * power.at(n - 1) *
-                       (k0(lambda_h_n, delta_t_n) -
-                        (k2(lambda_h_n, delta_t_n) +
-                         (gamma - 1) * delta_t_n * k1(lambda_h_n, delta_t_n)) /
-                            (gamma * delta_t_n * delta_t_n)) +
-                   H_prev_prev *
-                       (k2(lambda_h_n, delta_t_n) -
-                        k1(lambda_h_n, delta_t_n) * delta_t_n) /
-                       ((1 + gamma) * gamma * delta_t_n * delta_t_n));;
+    1 / util::E(lambda_h_n, delta_t_n) *
+    (rho_d.at(n - 1) -
+     power.at(0) * gamma_d * eta * util::k0(lambda_h_n, delta_t_n)) +
+    gamma_d / util::E(lambda_h_n, delta_t_n) *
+    (pow_norm.at(n - 1) * power.at(n - 1) *
+     (util::k0(lambda_h_n, delta_t_n) -
+      (util::k2(lambda_h_n, delta_t_n) +
+       (gamma - 1) * delta_t_n * util::k1(lambda_h_n, delta_t_n)) /
+      (gamma * delta_t_n * delta_t_n)) +
+     H_prev_prev *
+     (util::k2(lambda_h_n, delta_t_n) -
+      util::k1(lambda_h_n, delta_t_n) * delta_t_n) /
+     ((1 + gamma) * gamma * delta_t_n * delta_t_n));;
 
   return std::make_pair(a1, b1);
 }
@@ -126,7 +126,7 @@ const double Solver::computePower(
     const double& eta, const double& alpha, const double& gamma) {
   double tau = 0.0, s_hat_d = 0.0, s_d_prev = 0.0;
   for (int k = 0; k < precursors.size(); k++) {
-    double w = 1 / E(precursors.at(k)->decayConstant().at(n), delta_t.at(n));
+    double w = 1 / util::E(precursors.at(k)->decayConstant().at(n), delta_t.at(n));
     const auto decay_constant = &precursors.at(k)->decayConstant();
 
     omega[k] = computeOmega(k, n, w, gamma);

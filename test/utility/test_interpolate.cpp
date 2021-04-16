@@ -1,6 +1,8 @@
 #include "../catch.hpp"
 #include "utility/interpolate.hpp"
 
+using namespace util;
+
 TEST_CASE( "Test linear interpolation functions", "[interpolate]" ) {
   std::vector<double> x = {1.0, 1.5, 2.0};
   std::vector<double> y = {2.0, 3.0, 4.0};

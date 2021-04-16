@@ -16,9 +16,9 @@ Parareal::TimeBins Parareal::generateFineTime(Parareal::TimeIndex n) {
   }
 
   // push back the new time steps
-  for (const auto& t : linspace(_coarse_time.at(n),
-				_coarse_time.at(n+1),
-				_n_fine_per_coarse+1)) {
+  for (const auto& t : util::linspace(_coarse_time.at(n),
+				      _coarse_time.at(n+1),
+				      _n_fine_per_coarse+1)) {
     fine_time.push_back(t);
   }
     

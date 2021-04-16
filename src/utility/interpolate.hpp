@@ -4,9 +4,11 @@
 #include <cmath>
 #include <vector>
 
-inline double interpolate(std::vector<double> &x,
-			  std::vector<double> &y,
-			  double x_val)
+namespace util {
+
+inline const double interpolate(const std::vector<double> &x,
+				const std::vector<double> &y,
+				const double x_val)
 {
    int size = x.size();
 
@@ -29,9 +31,9 @@ inline double interpolate(std::vector<double> &x,
    return ya + t * ( x_val - a );
 }
 
-inline std::vector<double> interpolate(std::vector<double> &x,
-				       std::vector<double> &y,
-				       std::vector<double> &x_new) {
+inline const std::vector<double> interpolate(const std::vector<double> &x,
+					     const std::vector<double> &y,
+					     const std::vector<double> &x_new) {
   std::vector<double> y_new;
 
   for (const auto& x_val : x_new) {
@@ -84,4 +86,6 @@ inline double k2( const double lambda, const double delta_t ) {
   return delta_t * delta_t * delta_t *  E(lambda, delta_t) / 3;
 }
 
+} // namespace util
+  
 #endif

@@ -43,7 +43,7 @@ public:
       _precursors(precursors) {}
 
   // Interpolate parameters for the fine time mesh
-  EPKEParameters interpolate();
+  const EPKEParameters interpolate(const timeBins& fine_time) const;
   
 };
 
