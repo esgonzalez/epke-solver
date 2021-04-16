@@ -38,11 +38,10 @@ void Input::execute() {
   Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
       epke_node.child("concentration_histories"));
 
-  EPKEParameters epke_parameters(time, gen_time, pow_norm, rho_imp,
-				 beta_eff, lambda_h, precursors);
+  EPKEParameters epke_params(time, gen_time, pow_norm, rho_imp,
+			     beta_eff, lambda_h, precursors);
   
-  Solver solver(time, gen_time, pow_norm, rho_imp,
-		beta_eff, lambda_h, precursors);
+  Solver solver(epke_params);
 
   // Set the precomputed values if the simulation doesn't start at t=0
   solver.setPrecomputedValues(p_history, concentration_histories);

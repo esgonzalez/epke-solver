@@ -10,20 +10,18 @@
 class Solver {
 public:
   template <typename T>
-  using precBins = std::vector<T>;      // binning over precursor groups
-  using timeBins = std::vector<double>; // binning over time variable
+  using precBins  = std::vector<T>;      // binning over precursor groups
+  using timeBins  = std::vector<double>; // binning over time variable
   using TimeIndex = uint32_t;
   using PrecIndex = uint8_t;
 
 private:
   // input member variables
-  const timeBins time;     // vector of time points
-  const timeBins gen_time; // average neutron generation time (Lambda)
+  const EPKEParameters params;
+  
   const timeBins pow_norm; // power normalization factor (f_fp)
-  const timeBins rho_imp;  // the imposed reactivity (without feedback)
   const timeBins beta_eff; // the total delayed neutron fraction
   const timeBins lambda_h;
-  const precBins<Precursor::ptr> precursors;
 
   // output member variables
   timeBins power; // power at various points in time
@@ -57,10 +55,7 @@ private:
       const TimeIndex& n, const double& alpha, const double& gamma) const;
 
 public:
-  Solver(
-      const timeBins& time, const timeBins& gen_time, const timeBins& pow_norm,
-      const timeBins& rho_imp, const timeBins& beta_eff,
-      const timeBins& lambda_h, const precBins<Precursor::ptr>& precursors);
+  Solver(const EPKEParameters parameters);
 
   // Set values that have been precomputed (for the parareal solver) so the
   // simulation does not have to begin at t=0
