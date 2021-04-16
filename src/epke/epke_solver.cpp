@@ -21,6 +21,12 @@ Solver::Solver(const EPKEParameters params)
 		   timeBins(params.getNumTimeSteps())) {
 
   const auto& time = params.getTime();
+
+  std::cout << "time: " << params.getTime(10) << std::endl;
+  std::cout << "decay_constant: " << params.getDecayConstant(3,10) << std::endl;
+  std::cout << "delayed_fraction: " << params.getDelayedFraction(3,10) << std::endl;
+  std::cout << "rho_imp: " << params.getRhoImp(10) << std::endl;
+  std::cout << "gen_time: " << params.getGenTime(10) << std::endl;
   
   // compute the delta_t vector
   for (int i = 0; i < time.size() - 1; i++) {
@@ -49,7 +55,8 @@ const double Solver::computeOmega(
     const PrecIndex& k, const TimeIndex& n, const double& w,
     const double& gamma) const {
   const auto lambda_k = params.getDecayConstant(k,n);
-  return params.getGenTime(0) / params.getGenTime(n) * params.getDelayedFraction(k,n) * w *
+  return params.getGenTime(0) / params.getGenTime(n) *
+    params.getDelayedFraction(k,n) * w *
     (util::k2(lambda_k, delta_t.at(n)) +
      gamma * delta_t.at(n) * util::k1(lambda_k, delta_t.at(n))) /
     ((1 + gamma) * delta_t.at(n) * delta_t.at(n));
@@ -63,8 +70,7 @@ const double Solver::computeZetaHat(
 
   if (n < 2) {
     beta_prev_prev = params.getDelayedFraction(k,n-1);
-    beta_prev_prev = params.getDelayedFraction(k,n-1);
-    power_prev_prev = power.at(1);
+    power_prev_prev = power.at(n-1);
     gen_time_prev_prev = params.getGenTime(n-1);
   } else {
     beta_prev_prev = params.getDelayedFraction(k,n-2);
@@ -72,6 +78,12 @@ const double Solver::computeZetaHat(
     gen_time_prev_prev = params.getGenTime(n-2);
   }
 
+  if (n < 3) {
+    std::cout << "beta_prev_prev: " << beta_prev_prev << std::endl;
+    std::cout << "power_prev_prev: " << power_prev_prev << std::endl;
+    std::cout << "gen_time_prev_prev: " << gen_time_prev_prev << std::endl;
+  }
+  
   return w * concentrations.at(k).at(n - 1) +
     w * params.getGenTime(0) * power.at(n - 1) *
     params.getDelayedFraction(k,n-1) / params.getGenTime(n - 1) *
@@ -135,6 +147,11 @@ const double Solver::computePower(
     omega[k] = computeOmega(k, n, w, gamma);
     zeta_hat[k] = computeZetaHat(k, n, w, gamma);
 
+    //std::cout << "omega[" << k << "] = " << omega[k] << std::endl;
+    if (n < 3) {
+      std::cout << "zeta_hat[" << n << "," << k << "] = " << zeta_hat[k] << std::endl;
+    }
+    
     // accumulate the weighted sum
     tau += params.getDecayConstant(k,n) * omega.at(k);
     s_hat_d += params.getDecayConstant(k,n) * zeta_hat.at(k);
@@ -143,6 +160,10 @@ const double Solver::computePower(
 
   std::pair<double, double> a1b1 = computeA1B1(n, gamma_d, eta, gamma);
 
+  if (n < 3) {
+    std::cout << "a1b1[" << n << "] = (" << a1b1.first << ", " << a1b1.second << ")" << std::endl;
+  }
+  
   return computeABC(n, theta, alpha, a1b1, tau, s_hat_d, s_d_prev);
 }
 
@@ -151,11 +172,10 @@ const double Solver::computeABC(
     const std::pair<double, double>& a1b1, const double& tau,
     const double& s_hat_d, const double& s_d_prev) const {
   double a = theta * delta_t.at(n) * a1b1.first / params.getGenTime(n);
-  double b = theta * delta_t.at(n) *
-    (((a1b1.second - beta_eff.at(n)) / params.getGenTime(n) - alpha) +
-     tau / params.getGenTime(0)) - 1;
-  double c =
-    theta * delta_t.at(n) / params.getGenTime(0) * s_hat_d +
+  double b = theta * delta_t.at(n) * (((a1b1.second - beta_eff.at(n))
+				       / params.getGenTime(n) - alpha) +
+				      tau / params.getGenTime(0)) - 1;
+  double c = theta * delta_t.at(n) / params.getGenTime(0) * s_hat_d +
     exp(alpha * delta_t.at(n)) *
     ((1 - theta) * delta_t.at(n) *
      (((rho.at(n - 1) - beta_eff.at(n - 1)) / params.getGenTime(n - 1) -
@@ -163,6 +183,10 @@ const double Solver::computeABC(
       s_d_prev / params.getGenTime(0)) +
      power.at(n - 1));
 
+  if (n < 3) {
+    std::cout << "a, b, c = " << a << ", " << b << ", " << c << std::endl;
+  }
+  
   if (a < 0) {
     return (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
   } else if (a == 0) {
@@ -209,6 +233,10 @@ void Solver::solve(const double theta, const double gamma_d, const double eta) {
     // evaluate the power at this time step
     power[n] = computePower(n, theta, gamma_d, eta, alpha, gamma);
 
+    if (n < 3) {
+      std::cout << "power[" << n << "] = " << power[n] << std::endl;
+    }
+    
     // test whether we accept or reject the transformation parameter
     // if (!acceptTransformation(n, alpha, gamma)) {
     // alpha = 0.0;
