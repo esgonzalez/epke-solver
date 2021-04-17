@@ -19,15 +19,15 @@ private:
   // input member variables
   const EPKEParameters params;
   
-  const timeBins pow_norm; // power normalization factor (f_fp)
-  const timeBins beta_eff; // the total delayed neutron fraction
-  const timeBins lambda_h;
-
   // output member variables
   timeBins power; // power at various points in time
   timeBins rho;   // reactivity with feedback (to be calculated)
-  timeBins rho_d;
+  timeBins rho_d; // difference between imposed and calculated reactivities
+
+  // TODO: move this to EPKEParameters
   timeBins delta_t;
+
+  // power and concentration histories provided at start of simulation
   timeBins p_history;
   precBins<timeBins> concentrations; // precursor concentrations
 
@@ -36,8 +36,8 @@ private:
 
   // private methods
   const double computeOmega(
-      const PrecIndex& k, const TimeIndex& n, const double& w,
-      const double& gamma) const;
+      const PrecIndex k, const TimeIndex n,
+      const double w, const double gamma) const;
   const double computeZetaHat(
       const PrecIndex& k, const TimeIndex& n, const double& w,
       const double& gamma) const;
@@ -61,7 +61,8 @@ public:
   // simulation does not have to begin at t=0
   void setPrecomputedValues(const timeBins& p_history,
 			    const precBins<timeBins>& concentration_histories);
-  
+
+  // TODO: Move theta, gamma_d, and eta to EPKEParameters
   void solve(const double theta, const double gamma_d, const double eta);
   
   void buildXMLDoc(pugi::xml_document& doc) const;

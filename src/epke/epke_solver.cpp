@@ -8,9 +8,6 @@
 
 Solver::Solver(const EPKEParameters params)
   : params(params),
-    pow_norm(params.getPowNorm()),
-    beta_eff(params.getBetaEff()),
-    lambda_h(params.getLambdaH()),
     delta_t(params.getNumTimeSteps()),
     power(params.getNumTimeSteps()),
     rho(params.getNumTimeSteps()),
@@ -20,14 +17,13 @@ Solver::Solver(const EPKEParameters params)
     concentrations(params.getNumPrecursors(),
 		   timeBins(params.getNumTimeSteps())) {
 
-  const auto& time = params.getTime();
-
   // compute the delta_t vector
-  for (int i = 0; i < time.size() - 1; i++) {
-    delta_t[i] = time.at(i + 1) - time.at(i);
+  for (int i = 0; i < params.getNumTimeSteps() - 1; i++) {
+    delta_t[i] = params.getTime(i+1) - params.getTime(i);
   }
-  delta_t[time.size() - 1] =
-      time.at(time.size() - 1) - time.at(time.size() - 2);
+  delta_t[params.getNumTimeSteps() - 1] =
+    params.getTime(params.getNumTimeSteps() - 1)
+    - params.getTime(params.getNumTimeSteps() - 2);
 }
 
 void Solver::setPrecomputedValues(const timeBins& power_history,
@@ -46,8 +42,8 @@ void Solver::setPrecomputedValues(const timeBins& power_history,
 }
 
 const double Solver::computeOmega(
-    const PrecIndex& k, const TimeIndex& n, const double& w,
-    const double& gamma) const {
+    const PrecIndex k, const TimeIndex n, const double w,
+    const double gamma) const {
   const auto lambda_k = params.getDecayConstant(k,n);
   return params.getGenTime(0) / params.getGenTime(n) *
     params.getDelayedFraction(k,n) * w *
@@ -94,16 +90,16 @@ std::pair<double, double> Solver::computeA1B1(
 
   // we have to set these values so we don't get an out of range vector
   if (n < 2) {
-    H_prev_prev = pow_norm.at(n - 1) * power.at(n - 1);
+    H_prev_prev = params.getPowNorm(n-1) * power.at(n - 1);
   } else {
-    H_prev_prev = pow_norm.at(n - 2) * power.at(n - 2);
+    H_prev_prev = params.getPowNorm(n-2) * power.at(n - 2);
   }
 
   // define local variables to avoid numerous function calls
-  double lambda_h_n = lambda_h.at(n);
+  double lambda_h_n = params.getLambdaH(n);
   double delta_t_n = delta_t.at(n);
 
-  double a1 = gamma_d * pow_norm.at(n) / util::E(lambda_h_n, delta_t_n) *
+  double a1 = gamma_d * params.getPowNorm(n) / util::E(lambda_h_n, delta_t_n) *
     (util::k2(lambda_h_n, delta_t_n) +
      util::k1(lambda_h_n, delta_t_n) * gamma * delta_t_n) /
     ((1 + gamma) * delta_t_n * delta_t_n);
@@ -112,7 +108,7 @@ std::pair<double, double> Solver::computeA1B1(
     (rho_d.at(n - 1) -
      power.at(0) * gamma_d * eta * util::k0(lambda_h_n, delta_t_n)) +
     gamma_d / util::E(lambda_h_n, delta_t_n) *
-    (pow_norm.at(n - 1) * power.at(n - 1) *
+    (params.getPowNorm(n-1) * power.at(n - 1) *
      (util::k0(lambda_h_n, delta_t_n) -
       (util::k2(lambda_h_n, delta_t_n) +
        (gamma - 1) * delta_t_n * util::k1(lambda_h_n, delta_t_n)) /
@@ -151,13 +147,13 @@ const double Solver::computeABC(
     const std::pair<double, double>& a1b1, const double& tau,
     const double& s_hat_d, const double& s_d_prev) const {
   double a = theta * delta_t.at(n) * a1b1.first / params.getGenTime(n);
-  double b = theta * delta_t.at(n) * (((a1b1.second - beta_eff.at(n))
+  double b = theta * delta_t.at(n) * (((a1b1.second - params.getBetaEff(n))
 				       / params.getGenTime(n) - alpha) +
 				      tau / params.getGenTime(0)) - 1;
   double c = theta * delta_t.at(n) / params.getGenTime(0) * s_hat_d +
     exp(alpha * delta_t.at(n)) *
     ((1 - theta) * delta_t.at(n) *
-     (((rho.at(n - 1) - beta_eff.at(n - 1)) / params.getGenTime(n - 1) -
+     (((rho.at(n - 1) - params.getBetaEff(n - 1)) / params.getGenTime(n - 1) -
        alpha) * power.at(n - 1) +
       s_d_prev / params.getGenTime(0)) +
      power.at(n - 1));
@@ -239,7 +235,7 @@ void Solver::buildXMLDoc(pugi::xml_document& doc) const {
 
   for (int n = 0; n < params.getNumTimeSteps(); n++) {
     time_str << std::setprecision(6) << params.getTime(n);
-    power_str << std::setprecision(12) << pow_norm.at(n) * power.at(n);
+    power_str << std::setprecision(12) << params.getPowNorm(n) * power.at(n);
     rho_str << std::setprecision(12) << rho.at(n);
     if (n != params.getNumTimeSteps() - 1) {
       time_str << ", ";

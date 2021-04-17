@@ -14,6 +14,8 @@ protected:
   using precIndex = uint8_t;
 };
 
+// TODO: Break up this class into its own hpp and cpp files and move to epke
+//       directory
 class EPKEParameters : SolverParameters {
 private:
   // coarse time mesh parameters
@@ -44,31 +46,17 @@ public:
 
   // Getters
   const precIndex getNumPrecursors() const { return _precursors.size(); }
-  const timeIndex getNumTimeSteps()  const { return _time.size(); } 
+  const timeIndex getNumTimeSteps()  const { return _time.size(); }
   
-  const timeBins& getTime()    const { return _time;     }
-  const timeBins& getGenTime() const { return _gen_time; }
-  const timeBins& getPowNorm() const { return _pow_norm; }
-  const timeBins& getBetaEff() const { return _beta_eff; }
-  const timeBins& getLambdaH() const { return _lambda_h; }
-
-  const double getTime(timeIndex n)   const { return _time.at(n); }
-  const double getRhoImp(timeIndex n) const { return _rho_imp.at(n); }
+  const double getTime(timeIndex n)    const { return _time.at(n);     }
+  const double getRhoImp(timeIndex n)  const { return _rho_imp.at(n);  }
   const double getGenTime(timeIndex n) const { return _gen_time.at(n); }
+  const double getPowNorm(timeIndex n) const { return _pow_norm.at(n); }
+  const double getBetaEff(timeIndex n) const { return _beta_eff.at(n); }
+  const double getLambdaH(timeIndex n) const { return _lambda_h.at(n); }
   
-  const precBins<Precursor::ptr>& getPrecursors() const { return _precursors; }
-  Precursor::ptr getPrecursor(precIndex k) const { return _precursors.at(k); }
-
-  const timeBins& getDelayedFraction(precIndex k) const {
-    return _precursors.at(k)->delayedFraction();
-  }
-
   const double getDelayedFraction(precIndex k, timeIndex n) const {
     return _precursors.at(k)->delayedFraction(n);
-  }
-
-  const timeBins& getDecayConstant(precIndex k) const {
-    return _precursors.at(k)->decayConstant();
   }
 
   const double getDecayConstant(precIndex k, timeIndex n) const {
