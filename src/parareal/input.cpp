@@ -38,7 +38,7 @@ void Input::execute() {
   Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
       epke_node.child("concentration_histories"));
 
-  EPKEParameters epke_params(time, gen_time, pow_norm, rho_imp,
+  EPKEParameters epke_params(time, rho_imp, gen_time, pow_norm,
 			     beta_eff, lambda_h, precursors);
   
   Solver solver(epke_params);

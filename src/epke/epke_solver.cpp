@@ -72,12 +72,6 @@ const double Solver::computeZetaHat(
     gen_time_prev_prev = params.getGenTime(n-2);
   }
 
-  if (n < 3) {
-    std::cout << "beta_prev_prev: " << beta_prev_prev << std::endl;
-    std::cout << "power_prev_prev: " << power_prev_prev << std::endl;
-    std::cout << "gen_time_prev_prev: " << gen_time_prev_prev << std::endl;
-  }
-  
   return w * concentrations.at(k).at(n - 1) +
     w * params.getGenTime(0) * power.at(n - 1) *
     params.getDelayedFraction(k,n-1) / params.getGenTime(n - 1) *
@@ -141,11 +135,6 @@ const double Solver::computePower(
     omega[k] = computeOmega(k, n, w, gamma);
     zeta_hat[k] = computeZetaHat(k, n, w, gamma);
 
-    //std::cout << "omega[" << k << "] = " << omega[k] << std::endl;
-    if (n < 3) {
-      std::cout << "zeta_hat[" << n << "," << k << "] = " << zeta_hat[k] << std::endl;
-    }
-    
     // accumulate the weighted sum
     tau += params.getDecayConstant(k,n) * omega.at(k);
     s_hat_d += params.getDecayConstant(k,n) * zeta_hat.at(k);
@@ -154,10 +143,6 @@ const double Solver::computePower(
 
   std::pair<double, double> a1b1 = computeA1B1(n, gamma_d, eta, gamma);
 
-  if (n < 3) {
-    std::cout << "a1b1[" << n << "] = (" << a1b1.first << ", " << a1b1.second << ")" << std::endl;
-  }
-  
   return computeABC(n, theta, alpha, a1b1, tau, s_hat_d, s_d_prev);
 }
 
@@ -177,10 +162,6 @@ const double Solver::computeABC(
       s_d_prev / params.getGenTime(0)) +
      power.at(n - 1));
 
-  if (n < 3) {
-    std::cout << "a, b, c = " << a << ", " << b << ", " << c << std::endl;
-  }
-  
   if (a < 0) {
     return (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
   } else if (a == 0) {
@@ -227,10 +208,6 @@ void Solver::solve(const double theta, const double gamma_d, const double eta) {
     // evaluate the power at this time step
     power[n] = computePower(n, theta, gamma_d, eta, alpha, gamma);
 
-    if (n < 3) {
-      std::cout << "power[" << n << "] = " << power[n] << std::endl;
-    }
-    
     // test whether we accept or reject the transformation parameter
     // if (!acceptTransformation(n, alpha, gamma)) {
     // alpha = 0.0;
