@@ -22,12 +22,6 @@ Solver::Solver(const EPKEParameters params)
 
   const auto& time = params.getTime();
 
-  std::cout << "time: " << params.getTime(10) << std::endl;
-  std::cout << "decay_constant: " << params.getDecayConstant(3,10) << std::endl;
-  std::cout << "delayed_fraction: " << params.getDelayedFraction(3,10) << std::endl;
-  std::cout << "rho_imp: " << params.getRhoImp(10) << std::endl;
-  std::cout << "gen_time: " << params.getGenTime(10) << std::endl;
-  
   // compute the delta_t vector
   for (int i = 0; i < time.size() - 1; i++) {
     delta_t[i] = time.at(i + 1) - time.at(i);
@@ -74,7 +68,7 @@ const double Solver::computeZetaHat(
     gen_time_prev_prev = params.getGenTime(n-1);
   } else {
     beta_prev_prev = params.getDelayedFraction(k,n-2);
-    power_prev_prev = power.at(n - 2);
+    power_prev_prev = power.at(n-2);
     gen_time_prev_prev = params.getGenTime(n-2);
   }
 
