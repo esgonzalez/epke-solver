@@ -14,9 +14,6 @@ private:
 
   std::vector<double> const loadVectorData(const pugi::xml_node& node);
 
-  std::vector<Precursor::ptr> const loadPrecursors(
-      const pugi::xml_node& precursors_node, const Solver::TimeIndex n_steps);
-
   const Solver::precBins<Solver::timeBins> loadConcentrationHistories(
       const pugi::xml_node& concentrations_node);
 

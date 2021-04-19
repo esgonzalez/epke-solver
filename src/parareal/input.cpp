@@ -24,23 +24,12 @@ void Input::execute() {
 
   n_steps = epke_node.attribute("n_steps").as_int();
 
-  timeBins<double> time = loadVectorData(epke_node.child("time"));
-  timeBins<double> rho_imp = loadVectorData(epke_node.child("rho_imp"));
-  timeBins<double> gen_time = loadVectorData(epke_node.child("gen_time"));
-  timeBins<double> pow_norm = loadVectorData(epke_node.child("pow_norm"));
-  timeBins<double> beta_eff = loadVectorData(epke_node.child("beta_eff"));
-  timeBins<double> lambda_h = loadVectorData(epke_node.child("lambda_h"));
-  timeBins<double> p_history = loadVectorData(epke_node.child("p_history"));
-
-  Solver::precBins<Precursor::ptr> precursors =
-      loadPrecursors(epke_node.child("precursors"), time.size());
+  Solver::timeBins p_history = loadVectorData(epke_node.child("p_history"));
 
   Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
       epke_node.child("concentration_histories"));
 
-  EPKEParameters epke_params(time, rho_imp, gen_time, pow_norm,
-			     beta_eff, lambda_h, precursors);
-  
+  EPKEParameters epke_params(epke_node);
   Solver solver(epke_params);
 
   // Set the precomputed values if the simulation doesn't start at t=0
@@ -79,19 +68,6 @@ const std::vector<double> Input::loadVectorData(const pugi::xml_node& node) {
   }
 
   return result;
-}
-
-std::vector<Precursor::ptr> const Input::loadPrecursors(
-    const pugi::xml_node& precursors_node, const uint32_t n_steps) {
-  std::vector<Precursor::ptr> precursors;
-  for (auto precursor_node : precursors_node.children()) {
-    timeBins<double> decay_constant = std::vector<double>(
-        n_steps, precursor_node.attribute("decay_constant").as_double());
-    timeBins<double> beta = std::vector<double>(
-        n_steps, precursor_node.attribute("beta").as_double());
-    precursors.push_back(std::make_shared<Precursor>(decay_constant, beta));
-  }
-  return precursors;
 }
 
 const Solver::precBins<Solver::timeBins> Input::loadConcentrationHistories(

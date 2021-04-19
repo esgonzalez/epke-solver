@@ -4,30 +4,36 @@
 #include <vector>
 
 #include "parareal/precursor.hpp"
+#include "parareal/definitions.hpp"
+#include "pugi/pugixml.hpp"
 
 class SolverParameters {
 protected:
   template <typename T>
-  using precBins = std::vector<T>;      // binning over precursor groups
-  using timeBins = std::vector<double>; // binning over time variable
-  using timeIndex = uint32_t;
-  using precIndex = uint8_t;
+  using precBins  = para::precBins<T>;
+  using timeBins  = para::timeBins;
+  using timeIndex = para::timeIndex;
+  using precIndex = para::precIndex;
 };
 
 // TODO: Break up this class into its own hpp and cpp files and move to epke
 //       directory
 class EPKEParameters : SolverParameters {
 private:
-  // coarse time mesh parameters
-  const timeBins _time;     // vector of time points
-  const timeBins _rho_imp;  // the imposed reactivity (without feedback)
-  const timeBins _gen_time; // Mean neutron generation time (Lambda)
-  const timeBins _pow_norm; // Power normalization factor
+  // time-dependent parameters
+  const timeBins _time;     // time points
+  const timeBins _rho_imp;  // imposed reactivity (without feedback)
+  const timeBins _gen_time; // mean neutron generation time (Lambda)
+  const timeBins _pow_norm; // power normalization factor
   const timeBins _beta_eff; // total delayed neutron fraction
-  const timeBins _lambda_h; // Linear heat conduction constant
-  const precBins<Precursor::ptr> _precursors;
+  const timeBins _lambda_h; // linear heat conduction constant
+  precBins<Precursor::ptr> _precursors;
   
 public:
+  // Construct from pugi xml node
+  EPKEParameters(const pugi::xml_node& epke_node);
+
+  // Construct from data vectors
   EPKEParameters(const timeBins& time,
 		 const timeBins& rho_imp,
 		 const timeBins& gen_time,
