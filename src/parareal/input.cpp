@@ -5,8 +5,10 @@
 
 #include "input.hpp"
 
+#include "epke/epke_solver.hpp"
 #include "parareal/parareal.hpp"
 #include "parareal/solver_parameters.hpp"
+#include "pugi/pugixml.hpp"
 
 void Input::execute() {
   pugi::xml_document input_file;
@@ -21,27 +23,11 @@ void Input::execute() {
   std::cout << "Reading input file: " << input_file_name << std::endl;
 
   pugi::xml_node epke_node = input_file.child("epke_input");
-
-  n_steps = epke_node.attribute("n_steps").as_int();
-
-  Solver::timeBins p_history = loadVectorData(epke_node.child("p_history"));
-
-  Solver::precBins<Solver::timeBins> concentration_histories = loadConcentrationHistories(
-      epke_node.child("concentration_histories"));
-
   EPKEParameters epke_params(epke_node);
   Solver solver(epke_params);
 
-  // Set the precomputed values if the simulation doesn't start at t=0
-  solver.setPrecomputedValues(p_history, concentration_histories);
-
-  // Grab additional simulation parameters
-  double theta = epke_node.attribute("theta").as_double();
-  double gamma_d = epke_node.attribute("gamma_d").as_double();
-  double eta = epke_node.attribute("eta").as_double();
-
   // Run the EPKE solver
-  solver.solve(theta, gamma_d, eta);
+  solver.solve();
 
   // build the xml document
   std::string outpath = epke_node.attribute("outpath").value();
@@ -50,41 +36,4 @@ void Input::execute() {
   solver.buildXMLDoc(doc);
   std::cout << "writing output to " << outpath << std::endl;
   doc.save(out);
-}
-
-const std::vector<double> Input::loadVectorData(const pugi::xml_node& node) {
-  std::vector<double> result;
-
-  // check to see if parameter is constant in time
-  double value = node.attribute("value").as_double();
-
-  if (value) {
-    result = std::vector<double>(n_steps, value);
-  } else {
-    std::istringstream iss(node.text().get());
-    for (double s; iss >> s;) {
-      result.push_back(s);
-    }
-  }
-
-  return result;
-}
-
-const Solver::precBins<Solver::timeBins> Input::loadConcentrationHistories(
-    const pugi::xml_node& concentrations_node) {
-
-  Solver::precBins<Solver::timeBins> concentration_histories;
-
-  for (auto history_node : concentrations_node.children()) {
-    std::vector<double> concentration_history;
-
-    std::istringstream iss(history_node.text().get());
-    for (double s; iss >> s;) {
-     concentration_history.push_back(s);
-    }
-
-    concentration_histories.push_back(concentration_history);
-  }
-
-  return concentration_histories;
 }

@@ -33,12 +33,12 @@
          <delayed_fraction value="0.0002584"/>
       </precursor>
    </precursors>
-   <concentration_histories>
-      <concentration_history k="0">2.0187499999999995e-08</concentration_history>
-      <concentration_history k="1">4.779874213836477e-08</concentration_history>
-      <concentration_history k="2">1.1687394957983195e-08</concentration_history>
-      <concentration_history k="3">9.652310594152782e-09</concentration_history>
-      <concentration_history k="4">7.856277179724816e-10</concentration_history>
-      <concentration_history k="5">6.577406709769383e-11</concentration_history>
-   </concentration_histories>
+   <zeta_histories>
+      <zeta_history k="0">2.0187499999999995e-08</zeta_history>
+      <zeta_history k="1">4.779874213836477e-08</zeta_history>
+      <zeta_history k="2">1.1687394957983195e-08</zeta_history>
+      <zeta_history k="3">9.652310594152782e-09</zeta_history>
+      <zeta_history k="4">7.856277179724816e-10</zeta_history>
+      <zeta_history k="5">6.577406709769383e-11</zeta_history>
+   </zeta_histories>
 </epke_input>

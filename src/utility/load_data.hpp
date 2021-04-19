@@ -27,6 +27,25 @@ loadVectorData(const pugi::xml_node& node, para::timeIndex n_steps) {
   return result;
 }
 
+inline const para::precBins<para::timeBins> loadZetaHistories(
+    const pugi::xml_node& histories_node) {
+
+  para::precBins<para::timeBins> concentration_histories;
+
+  for (auto history_node : histories_node.children()) {
+    std::vector<double> concentration_history;
+
+    std::istringstream iss(history_node.text().get());
+    for (double s; iss >> s;) {
+     concentration_history.push_back(s);
+    }
+
+    concentration_histories.push_back(concentration_history);
+  }
+
+  return concentration_histories;
+}
+
 } // namespace util
 
 #endif
