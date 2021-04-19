@@ -2,6 +2,7 @@
 #define _PARAREAL_DEFINITIONS_HEADER_
 
 #include <vector>
+#include <cstdint>
 
 namespace para {
   template <typename T>
