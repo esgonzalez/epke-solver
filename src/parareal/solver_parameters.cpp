@@ -9,29 +9,24 @@ para::SolverParameters::SolverParameters(const pugi::xml_node& solver_node) :
   _precursors(buildPrecursors(solver_node.child("precursors"),
 			      solver_node.attribute("n_steps").as_int())) {}
 
-EPKEParameters::EPKEParameters(const pugi::xml_node& epke_node) :
-  SolverParameters(epke_node),
-  _rho_imp(util::loadVectorData(epke_node.child("rho_imp"),
-				epke_node.attribute("n_steps").as_int())),
-  _gen_time(util::loadVectorData(epke_node.child("gen_time"),
-				 epke_node.attribute("n_steps").as_int())),
-  _pow_norm(util::loadVectorData(epke_node.child("pow_norm"),
-				 epke_node.attribute("n_steps").as_int())),
-  _beta_eff(util::loadVectorData(epke_node.child("beta_eff"),
-				 epke_node.attribute("n_steps").as_int())),
-  _lambda_h(util::loadVectorData(epke_node.child("lambda_h"),
-				 epke_node.attribute("n_steps").as_int())),
-  _p_history(util::loadVectorData(epke_node.child("p_history"),
-				  epke_node.attribute("n_steps").as_int())),
-  _zeta_histories(util::loadZetaHistories(epke_node.child("zeta_histories"))),
-  _theta(epke_node.attribute("theta").as_double()),
-  _gamma_d(epke_node.attribute("gamma_d").as_double()),
-  _eta(epke_node.attribute("eta").as_double()) {}
+EPKEParameters::EPKEParameters(const pugi::xml_node& input_node) :
+  SolverParameters(input_node),
+  _rho_imp(util::loadVectorData(input_node.child("rho_imp"),
+				input_node.attribute("n_steps").as_int())),
+  _gen_time(util::loadVectorData(input_node.child("gen_time"),
+				 input_node.attribute("n_steps").as_int())),
+  _pow_norm(util::loadVectorData(input_node.child("pow_norm"),
+				 input_node.attribute("n_steps").as_int())),
+  _beta_eff(util::loadVectorData(input_node.child("beta_eff"),
+				 input_node.attribute("n_steps").as_int())),
+  _lambda_h(util::loadVectorData(input_node.child("lambda_h"),
+				 input_node.attribute("n_steps").as_int())),
+  _theta(input_node.attribute("theta").as_double()),
+  _gamma_d(input_node.attribute("gamma_d").as_double()),
+  _eta(input_node.attribute("eta").as_double()) {}
 
 const EPKEParameters
-EPKEParameters::interpolate(const timeIndex n,
-			    const epke::EPKEOutput& coarse_output,
-			    const timeBins& fine_time) const {
+EPKEParameters::interpolate(const timeBins& fine_time) const {
   // interpolate the precursors
   precBins<Precursor::ptr> fine_precursors;
 
@@ -46,22 +41,6 @@ EPKEParameters::interpolate(const timeIndex n,
     fine_precursors.push_back(fine_precursor);
   }
 
-  // build the power and concentration histories vectors
-  timeBins p_history;
-  precBins<timeBins> zeta_histories;
-
-  for (timeIndex i = 0; i < n+1; i++) {
-    p_history.push_back(coarse_output.getPower(i));
-  }
-
-  for (precIndex k = 0; k < getNumPrecursors(); k++) {
-    timeBins zeta_history;
-    for (timeIndex i = 0; i < n+1; i++) {
-      zeta_history.push_back(coarse_output.getConcentration(k,i));
-    }
-    zeta_histories.push_back(zeta_history);
-  }
-
   return EPKEParameters(fine_time,
 			fine_precursors,
 			util::interpolate(_time, _rho_imp,  fine_time),
@@ -69,8 +48,6 @@ EPKEParameters::interpolate(const timeIndex n,
 			util::interpolate(_time, _pow_norm, fine_time),
 			util::interpolate(_time, _beta_eff, fine_time),
 			util::interpolate(_time, _lambda_h, fine_time),
-			p_history,
-			zeta_histories,
 			_theta,
 			_gamma_d,
 			_eta);

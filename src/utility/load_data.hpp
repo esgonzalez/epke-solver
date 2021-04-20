@@ -27,7 +27,19 @@ loadVectorData(const pugi::xml_node& node, para::timeIndex n_steps) {
   return result;
 }
 
-inline const para::precBins<para::timeBins> loadZetaHistories(
+inline const para::timeBins
+loadVectorData(const pugi::xml_node& node) {
+  para::timeBins result;
+
+  std::istringstream iss(node.text().get());
+  for (double s; iss >> s;) {
+    result.push_back(s);
+  }
+
+  return result;
+}
+
+inline const para::precBins<para::timeBins> loadZetas(
     const pugi::xml_node& histories_node) {
 
   para::precBins<para::timeBins> concentration_histories;

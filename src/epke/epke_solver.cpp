@@ -5,8 +5,11 @@
 #include "epke_solver.hpp"
 #include "utility/interpolate.hpp"
 
-Solver::Solver(const EPKEParameters params)
+using namespace epke;
+
+Solver::Solver(const EPKEParameters& params, const EPKEOutput& precomp)
   : params(params),
+    precomp(precomp),
     delta_t(params.getNumTimeSteps()),
     power(params.getNumTimeSteps()),
     rho(params.getNumTimeSteps()),
@@ -24,14 +27,15 @@ Solver::Solver(const EPKEParameters params)
 
   // set the initial concentration histories
   for (int k = 0; k < params.getNumPrecursors(); k++) {
-    for (int n = 0; n < params.getNumPrecomputedTimeSteps(); n++) {
-      concentrations[k][n] = params.getZetaHistory(k,n);
+    for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
+      concentrations[k][n] = precomp.getConcentration(k,n);
     }
   }
 
-  // set the initial power histories
-  for (int n = 0; n < params.getNumPrecomputedTimeSteps(); n++) {
-    power[n] = params.getPHistory(n);
+  // set the initial power histories and rho histories
+  for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
+    power[n] = precomp.getPower(n);
+    rho[n] = precomp.getRho(n);
   }
 }
 
@@ -181,10 +185,9 @@ const bool Solver::acceptTransformation(const timeIndex n,
 
 void Solver::solve() {
   // set initial conditions for the power and reactivity vectors
-  rho[0] = params.getRhoImp(0);
   double alpha = 0.0;
 
-  for (int n = params.getNumPrecomputedTimeSteps();
+  for (int n = precomp.getNumTimeSteps();
        n < params.getNumTimeSteps(); n++) {
     double gamma = delta_t.at(n - 1) / delta_t.at(n);
 

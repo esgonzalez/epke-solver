@@ -4,9 +4,9 @@
 #include "parareal/definitions.hpp"
 #include "parareal/solver_output.hpp"
 #include "parareal/solver_parameters.hpp"
+#include "epke/epke_solver.hpp"
 
 // TODO: Write the solver base class and make the EPKE solver a derived class
-//#include "solver.hpp"
 
 namespace para {
 
@@ -18,7 +18,7 @@ public:
 
 private:
   // Max number of parareal iterations
-  const precIndex _K;
+  const precIndex _max_iterations;
 
   // Number of fine time steps for every coarse time step
   const timeIndex _n_fine_per_coarse;
@@ -31,16 +31,18 @@ private:
   const SolverParameters _coarse_parameters;
 
   // Fine time grid (low fidelity) solver
-  //Solver _fine_solver;
+  epke::Solver _solver;
 
 public:
   Parareal(const SolverParameters& coarse_parameters,
 	   const SolverOutput&     coarse_output,
-	   const precIndex         K,
+	   const epke::Solver&     solver,
+	   const precIndex         max_iterations,
 	   const timeIndex         n_fine_per_coarse)
     : _coarse_parameters(coarse_parameters),
       _coarse_output(coarse_output),
-      _K(K),
+      _solver(solver),
+      _max_iterations(max_iterations),
       _n_fine_per_coarse(n_fine_per_coarse) {}
 
   // Generate fine time
@@ -48,6 +50,9 @@ public:
 
   // Update the coarse solution with a parareal iteration
   timeBins update_coarse_solution();
+
+  // Solve
+  void solve() { _solver.solve(); }
 
 };
 } // namespace para

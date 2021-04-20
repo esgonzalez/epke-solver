@@ -26,7 +26,10 @@ TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
       throw;
     }
 
-    EPKEParameters params(idoc.child("epke_input"));
+    pugi::xml_node parareal_node = idoc.child("parareal");
+
+    EPKEParameters params(parareal_node.child("epke_input"));
+    epke::EPKEOutput precomp(parareal_node.child("epke_output"));
     auto n_steps = params.getNumTimeSteps();
 
     // Load the output power from the regression test
@@ -34,7 +37,7 @@ TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
       util::loadVectorData(odoc.child("epke_output").child("power"), n_steps);
 
     // Create and run the EPKE solver
-    Solver solver(params);
+    epke::Solver solver(params, precomp);
     solver.solve();
 
     pugi::xml_document tdoc;

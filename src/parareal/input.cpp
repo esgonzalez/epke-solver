@@ -22,20 +22,24 @@ void Input::execute() {
 
   std::cout << "Reading input file: " << input_file_name << std::endl;
 
-  pugi::xml_node epke_node = input_file.child("epke_input");
-  EPKEParameters epke_params(epke_node);
-  Solver solver(epke_params);
+  pugi::xml_node parareal_node = input_file.child("parareal");
+  pugi::xml_node epke_input_node = parareal_node.child("epke_input");
+  pugi::xml_node epke_output_node = parareal_node.child("epke_output");
+  EPKEParameters epke_params(epke_input_node);
+  epke::EPKEOutput epke_precomputed(epke_output_node);
+  epke::Solver epke_solver(epke_params, epke_precomputed);
+  para::Parareal parareal(epke_params, epke_precomputed, epke_solver, 1, 1);
 
   // Run the EPKE solver
   std::cout << "Solving..." << std::endl;
-  solver.solve();
+  parareal.solve();
   std::cout << "Completed solve." << std::endl;
 
   // build the xml document
-  std::string outpath = epke_node.attribute("outpath").value();
+  std::string outpath = epke_input_node.attribute("outpath").value();
   std::ofstream out(outpath);
   pugi::xml_document doc;
-  solver.buildXMLDoc(doc);
+  epke_solver.buildXMLDoc(doc);
   std::cout << "Writing output to " << outpath << std::endl;
   doc.save(out);
 }

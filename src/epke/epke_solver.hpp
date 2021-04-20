@@ -6,6 +6,8 @@
 #include "parareal/definitions.hpp"
 #include "pugi/pugixml.hpp"
 
+namespace epke {
+
 class Solver {
 public:
   template <typename T>
@@ -18,9 +20,13 @@ private:
   // input member variables
   const EPKEParameters params;
 
+  // precomputed values of power, rho, and concentrations (so the simulation
+  // can start at t > 0)
+  const EPKEOutput precomp;
+
   // output member variables
-  timeBins power; // power at various points in time
-  timeBins rho;   // reactivity with feedback
+  timeBins power;                    // power at various points in time
+  timeBins rho;                      // reactivity with feedback
   precBins<timeBins> concentrations; // precursor concentrations
 
   // TODO: move this to EPKEParameters
@@ -58,11 +64,12 @@ private:
 				  const double    gamma) const;
 
 public:
-  Solver(const EPKEParameters parameters);
+  Solver(const EPKEParameters& parameters, const EPKEOutput& precomputed);
 
   void solve();
 
   void buildXMLDoc(pugi::xml_document& doc) const;
 };
+} // namespace epke
 
 #endif
