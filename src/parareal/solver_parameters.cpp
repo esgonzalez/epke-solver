@@ -3,9 +3,14 @@
 #include "utility/interpolate.hpp"
 #include "utility/load_data.hpp"
 
+para::SolverParameters::SolverParameters(const pugi::xml_node& solver_node) :
+  _time(util::loadVectorData(solver_node.child("time"),
+			     solver_node.attribute("n_steps").as_int())),
+  _precursors(buildPrecursors(solver_node.child("precursors"),
+			      solver_node.attribute("n_steps").as_int())) {}
+
 EPKEParameters::EPKEParameters(const pugi::xml_node& epke_node) :
-  _time(util::loadVectorData(epke_node.child("time"),
-			     epke_node.attribute("n_steps").as_int())),
+  SolverParameters(epke_node),
   _rho_imp(util::loadVectorData(epke_node.child("rho_imp"),
 				epke_node.attribute("n_steps").as_int())),
   _gen_time(util::loadVectorData(epke_node.child("gen_time"),
@@ -21,15 +26,7 @@ EPKEParameters::EPKEParameters(const pugi::xml_node& epke_node) :
   _zeta_histories(util::loadZetaHistories(epke_node.child("zeta_histories"))),
   _theta(epke_node.attribute("theta").as_double()),
   _gamma_d(epke_node.attribute("gamma_d").as_double()),
-  _eta(epke_node.attribute("eta").as_double())
-{
-  timeIndex n_steps = epke_node.attribute("n_steps").as_int();
-
-  // create the vector of precursors
-  for (const auto& prec_node : epke_node.child("precursors")) {
-    _precursors.push_back(std::make_shared<Precursor>(prec_node, n_steps));
-  }
-}
+  _eta(epke_node.attribute("eta").as_double()) {}
 
 const EPKEParameters EPKEParameters::interpolate(const timeBins& fine_time) const {
 
@@ -47,6 +44,7 @@ const EPKEParameters EPKEParameters::interpolate(const timeBins& fine_time) cons
   }
 
   return EPKEParameters(fine_time,
+			fine_precursors,
 			util::interpolate(_time, _rho_imp,  fine_time),
 			util::interpolate(_time, _gen_time, fine_time),
 			util::interpolate(_time, _pow_norm, fine_time),
@@ -54,7 +52,6 @@ const EPKEParameters EPKEParameters::interpolate(const timeBins& fine_time) cons
 			util::interpolate(_time, _lambda_h, fine_time),
 			_p_history,
 			_zeta_histories,
-			fine_precursors,
 			_theta,
 			_gamma_d,
 			_eta);

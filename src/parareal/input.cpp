@@ -27,13 +27,15 @@ void Input::execute() {
   Solver solver(epke_params);
 
   // Run the EPKE solver
+  std::cout << "Solving..." << std::endl;
   solver.solve();
+  std::cout << "Completed solve." << std::endl;
 
   // build the xml document
   std::string outpath = epke_node.attribute("outpath").value();
   std::ofstream out(outpath);
   pugi::xml_document doc;
   solver.buildXMLDoc(doc);
-  std::cout << "writing output to " << outpath << std::endl;
+  std::cout << "Writing output to " << outpath << std::endl;
   doc.save(out);
 }

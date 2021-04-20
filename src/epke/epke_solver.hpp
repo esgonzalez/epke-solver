@@ -9,8 +9,8 @@
 class Solver {
 public:
   template <typename T>
-  using precBins  = para::precBins<T>;      // binning over precursor groups
-  using timeBins  = para::timeBins; // binning over time variable
+  using precBins  = para::precBins<T>; // binning over precursor groups
+  using timeBins  = para::timeBins;    // binning over time variable
   using timeIndex = para::timeIndex;
   using precIndex = para::precIndex;
 

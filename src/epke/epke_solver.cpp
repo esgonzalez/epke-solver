@@ -1,6 +1,5 @@
 #include <cmath>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 #include "epke_solver.hpp"
@@ -181,8 +180,6 @@ const bool Solver::acceptTransformation(const timeIndex n,
 }
 
 void Solver::solve() {
-  std::cout << "solving..." << std::endl;
-
   // set initial conditions for the power and reactivity vectors
   rho[0] = params.getRhoImp(0);
   double alpha = 0.0;
@@ -215,8 +212,6 @@ void Solver::solve() {
     // update the full power and reactivity vectors
     rho[n] = a1b1.first * power.at(n) + a1b1.second;
   }
-
-  std::cout << "completed solve" << std::endl;
 }
 
 void Solver::buildXMLDoc(pugi::xml_document& doc) const {
