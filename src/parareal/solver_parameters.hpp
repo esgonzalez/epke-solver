@@ -5,6 +5,7 @@
 
 #include "parareal/precursor.hpp"
 #include "parareal/definitions.hpp"
+#include "parareal/solver_output.hpp"
 #include "pugi/pugixml.hpp"
 
 namespace para {
@@ -121,23 +122,25 @@ public:
   const double getGammaD() const { return _gamma_d; }
   const double getEta()    const { return _eta;     }
 
-  const double getRhoImp(timeIndex n)   const { return _rho_imp.at(n);   }
-  const double getGenTime(timeIndex n)  const { return _gen_time.at(n);  }
-  const double getPowNorm(timeIndex n)  const { return _pow_norm.at(n);  }
-  const double getBetaEff(timeIndex n)  const { return _beta_eff.at(n);  }
-  const double getLambdaH(timeIndex n)  const { return _lambda_h.at(n);  }
+  const double getRhoImp(const timeIndex n)   const { return _rho_imp.at(n);   }
+  const double getGenTime(const timeIndex n)  const { return _gen_time.at(n);  }
+  const double getPowNorm(const timeIndex n)  const { return _pow_norm.at(n);  }
+  const double getBetaEff(const timeIndex n)  const { return _beta_eff.at(n);  }
+  const double getLambdaH(const timeIndex n)  const { return _lambda_h.at(n);  }
 
   // These getters are for grabbing precomputed values from previous simulations
-  const double getPHistory(timeIndex n) const { return _p_history.at(n); }
+  const double getPHistory(const timeIndex n) const { return _p_history.at(n); }
 
-  const double getZetaHistory(precIndex k, timeIndex n) const {
+  const double getZetaHistory(const precIndex k, const timeIndex n) const {
     return _zeta_histories.at(k).at(n);
   }
 
   // TODO: The power and concentration histories for the fine mesh will have to
   //       come from the results of the coarse mesh
   // Interpolate parameters for the fine time mesh
-  const EPKEParameters interpolate(const timeBins& fine_time) const;
+  const EPKEParameters interpolate(const timeIndex n,
+				   const epke::EPKEOutput& coarse_output,
+				   const timeBins& fine_time) const;
 
 };
 

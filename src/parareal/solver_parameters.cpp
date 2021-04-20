@@ -28,8 +28,11 @@ EPKEParameters::EPKEParameters(const pugi::xml_node& epke_node) :
   _gamma_d(epke_node.attribute("gamma_d").as_double()),
   _eta(epke_node.attribute("eta").as_double()) {}
 
-const EPKEParameters EPKEParameters::interpolate(const timeBins& fine_time) const {
-
+const EPKEParameters
+EPKEParameters::interpolate(const timeIndex n,
+			    const epke::EPKEOutput& coarse_output,
+			    const timeBins& fine_time) const {
+  // interpolate the precursors
   precBins<Precursor::ptr> fine_precursors;
 
   for (const auto p : _precursors) {
@@ -43,6 +46,22 @@ const EPKEParameters EPKEParameters::interpolate(const timeBins& fine_time) cons
     fine_precursors.push_back(fine_precursor);
   }
 
+  // build the power and concentration histories vectors
+  timeBins p_history;
+  precBins<timeBins> zeta_histories;
+
+  for (timeIndex i = 0; i < n+1; i++) {
+    p_history.push_back(coarse_output.getPower(i));
+  }
+
+  for (precIndex k = 0; k < getNumPrecursors(); k++) {
+    timeBins zeta_history;
+    for (timeIndex i = 0; i < n+1; i++) {
+      zeta_history.push_back(coarse_output.getConcentration(k,i));
+    }
+    zeta_histories.push_back(zeta_history);
+  }
+
   return EPKEParameters(fine_time,
 			fine_precursors,
 			util::interpolate(_time, _rho_imp,  fine_time),
@@ -50,8 +69,8 @@ const EPKEParameters EPKEParameters::interpolate(const timeBins& fine_time) cons
 			util::interpolate(_time, _pow_norm, fine_time),
 			util::interpolate(_time, _beta_eff, fine_time),
 			util::interpolate(_time, _lambda_h, fine_time),
-			_p_history,
-			_zeta_histories,
+			p_history,
+			zeta_histories,
 			_theta,
 			_gamma_d,
 			_eta);
