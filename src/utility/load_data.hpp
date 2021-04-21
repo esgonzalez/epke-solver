@@ -42,7 +42,10 @@ loadVectorData(const pugi::xml_node& node) {
 inline const para::precBins<para::timeBins> loadZetas(
     const pugi::xml_node& histories_node) {
 
-  para::precBins<para::timeBins> concentration_histories;
+  template <typename T> using timeBins = std::vector<T>;
+  template <typename T> using precBins = std::vector<T>;
+
+  timeBins<precBins<double>> concentration_histories;
 
   for (auto history_node : histories_node.children()) {
     std::vector<double> concentration_history;

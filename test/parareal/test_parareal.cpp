@@ -14,6 +14,8 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
     timeBins coarse_time = {0.0, 1.0, 2.0, 3.0};
     precBins<Precursor::ptr> coarse_precursors;
 
+    // TODO: Change these to EPKEParameters and EPKEOutput to build a proper
+    //       parareal object and uncomment the require statements
     SolverParameters coarse_parameters(coarse_time, coarse_precursors);
     SolverOutput coarse_output;
     //epke::Solver epke_solver;
