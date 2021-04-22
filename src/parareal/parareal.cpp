@@ -5,6 +5,13 @@
 
 #include "utility/interpolate.hpp"
 
+para::Parareal::Parareal(const pugi::xml_node& parareal_node) :
+  _solver(parareal_node.child("epke_intput"),
+	  parareal_node.child("epke_output")),
+  _outpath(parareal_node.attribute("outpath").value()),
+  _max_iterations(parareal_node.attribute("max_iterations").as_int()),
+  _n_fine_per_coarse(parareal_node.attribute("n_fine_per_coarse").as_int()) {}
+
 para::timeBins para::Parareal::generateFineTime(para::timeIndex const n) {
   timeBins fine_time;
 
