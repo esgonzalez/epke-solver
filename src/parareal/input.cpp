@@ -3,9 +3,7 @@
 
 #include "input.hpp"
 
-#include "epke/epke_solver.hpp"
 #include "parareal/parareal.hpp"
-#include "parareal/solver_parameters.hpp"
 #include "pugi/pugixml.hpp"
 
 void Input::execute() {
