@@ -23,12 +23,17 @@ EPKEParameters::EPKEParameters(const pugi::xml_node& input_node) :
 				 input_node.attribute("n_steps").as_int())),
   _theta(input_node.attribute("theta").as_double()),
   _gamma_d(input_node.attribute("gamma_d").as_double()),
-  _eta(input_node.attribute("eta").as_double()) {}
+  _eta(input_node.attribute("eta").as_double()),
+  _interpolated(input_node.attribute("interpolated").as_bool()) {}
 
 const EPKEParameters
 EPKEParameters::interpolate(const timeBins& fine_time) const {
   // interpolate the precursors
   precBins<Precursor::ptr> fine_precursors;
+
+  if (_interpolated) {
+    return *this;
+  }
 
   for (const auto p : _precursors) {
     Precursor::ptr fine_precursor
@@ -50,5 +55,6 @@ EPKEParameters::interpolate(const timeBins& fine_time) const {
 			util::interpolate(_time, _lambda_h, fine_time),
 			_theta,
 			_gamma_d,
-			_eta);
+			_eta,
+			true);
 }

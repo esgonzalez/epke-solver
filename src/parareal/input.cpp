@@ -27,7 +27,8 @@ void Input::execute() {
   pugi::xml_node epke_output_node = parareal_node.child("epke_output");
   EPKEParameters epke_params(epke_input_node);
   epke::EPKEOutput epke_precomputed(epke_output_node);
-  epke::Solver epke_solver(epke_params, epke_precomputed);
+  epke::Solver epke_solver(parareal_node.child("epke_intput"),
+			   parareal_node.child("epke_output"));
   para::Parareal parareal(epke_params, epke_precomputed, epke_solver, 1, 1);
 
   // Run the EPKE solver

@@ -2,6 +2,7 @@
 #define _PARAREAL_SOLVER_PARAMETERS_HEADER_
 
 #include <vector>
+#include <memory>
 
 #include "parareal/precursor.hpp"
 #include "parareal/definitions.hpp"
@@ -17,6 +18,7 @@ public:
   using timeBins  = para::timeBins;
   using timeIndex = para::timeIndex;
   using precIndex = para::precIndex;
+  using ptr       = std::shared_ptr<SolverParameters>;
 
 protected:
   const timeBins _time;                       // time points
@@ -80,6 +82,8 @@ private:
   // eta = 1 -> first order heat conduction for power increment
   const double _eta;
 
+  const bool _interpolated; // indicates params have already been interpolated
+
 public:
   // Construct from pugi xml node
   EPKEParameters(const pugi::xml_node& input_node);
@@ -94,7 +98,8 @@ public:
 		 const timeBins& lambda_h,
 		 const double theta,
 		 const double gamma_d,
-		 const double eta)
+		 const double eta,
+		 const bool   interpolated = false)
     : SolverParameters(time, precursors),
       _rho_imp(rho_imp),
       _gen_time(gen_time),
@@ -103,7 +108,8 @@ public:
       _lambda_h(lambda_h),
       _theta(theta),
       _gamma_d(gamma_d),
-      _eta(eta) {}
+      _eta(eta),
+      _interpolated(interpolated) {}
 
   // Getters
   const double getTheta()                    const { return _theta;           }

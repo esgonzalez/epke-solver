@@ -7,6 +7,39 @@
 
 using namespace epke;
 
+Solver::Solver(const pugi::xml_node& input_node,
+	       const pugi::xml_node& output_node)
+  : params(input_node),
+    precomp(output_node),
+    delta_t(params.getNumTimeSteps()),
+    power(params.getNumTimeSteps()),
+    rho(params.getNumTimeSteps()),
+    omega(params.getNumPrecursors()),
+    zeta_hat(params.getNumPrecursors()),
+    concentrations(params.getNumPrecursors(),
+		   timeBins(params.getNumTimeSteps())) {
+  // compute the delta_t vector
+  for (int i = 0; i < params.getNumTimeSteps() - 1; i++) {
+    delta_t[i] = params.getTime(i+1) - params.getTime(i);
+  }
+  delta_t[params.getNumTimeSteps() - 1] =
+    params.getTime(params.getNumTimeSteps() - 1)
+    - params.getTime(params.getNumTimeSteps() - 2);
+
+  // set the initial concentration histories
+  for (int k = 0; k < params.getNumPrecursors(); k++) {
+    for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
+      concentrations[k][n] = precomp.getConcentration(k,n);
+    }
+  }
+
+  // set the initial power histories and rho histories
+  for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
+    power[n] = precomp.getPower(n);
+    rho[n] = precomp.getRho(n);
+  }
+}
+
 Solver::Solver(const EPKEParameters& params, const EPKEOutput& precomp)
   : params(params),
     precomp(precomp),

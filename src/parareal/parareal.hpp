@@ -23,24 +23,15 @@ private:
   // Number of fine time steps for every coarse time step
   const timeIndex _n_fine_per_coarse;
 
-  // Time dependent solution on the coarse time grid
-  const SolverOutput _coarse_output;
-
-  // Time dependent solver parameters on the coarse time grid. These will be
-  // interpolated for the fine solver
-  const SolverParameters _coarse_parameters;
-
   // Fine time grid (low fidelity) solver
   epke::Solver _solver;
 
 public:
-  Parareal(const SolverParameters& coarse_parameters,
-	   const SolverOutput&     coarse_output,
-	   const epke::Solver&     solver,
+  Parareal(const epke::Solver&     solver,
 	   const precIndex         max_iterations,
 	   const timeIndex         n_fine_per_coarse)
-    : _coarse_parameters(coarse_parameters),
-      _coarse_output(coarse_output),
+    : _parameters(parameters),
+      _output(output),
       _solver(solver),
       _max_iterations(max_iterations),
       _n_fine_per_coarse(n_fine_per_coarse) {}

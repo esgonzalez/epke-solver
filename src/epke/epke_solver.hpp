@@ -1,6 +1,8 @@
 #ifndef _EPKE_EPKE_SOLVER_HEADER_
 #define _EPKE_EPKE_SOLVER_HEADER_
 
+#include <memory>
+
 #include "parareal/precursor.hpp"
 #include "parareal/solver_parameters.hpp"
 #include "parareal/definitions.hpp"
@@ -64,9 +66,17 @@ private:
 				  const double    gamma) const;
 
 public:
+  // Construct from pugixml nodes
+  Solver(const pugi::xml_node& input_node, const pugi::xml_node& output_node);
+
+  // Construct from parameters and precomputed objects
   Solver(const EPKEParameters& parameters, const EPKEOutput& precomputed);
 
   void solve();
+
+  para::SolverParameters::ptr getParameters() const {
+    return std::make_shared<para::SolverParameters>(params);
+  }
 
   void buildXMLDoc(pugi::xml_document& doc) const;
 };
