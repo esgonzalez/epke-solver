@@ -11,22 +11,47 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
   SECTION("Generate a fine time mesh for a given index", "[generateFineTime]") {
     using namespace para;
 
-    timeBins coarse_time = {0.0, 1.0, 2.0, 3.0};
-    precBins<Precursor::ptr> coarse_precursors;
+    // build EPKE parameters
+    timeBins time = {0.0, 1.0, 2.0, 3.0};
+    precBins<Precursor::ptr> precursors;
+    timeBins rho_imp    = {0.0, 1.0, 2.0, 1.0, 0.0};
+    timeBins gen_time   = {1.0, 1.0, 1.0, 1.0, 1.0};
+    timeBins pow_norm   = {1.0, 1.0, 1.0, 1.0, 1.0};
+    timeBins beta_eff   = {0.1, 0.1, 0.1, 0.1, 0.1};
+    timeBins lambda_h   = {2.0, 2.0, 2.0, 2.0, 2.0};
+    double theta   = 0.0;
+    double gamma_d = 0.0;
+    double eta     = 1.0;
 
-    // TODO: Change these to EPKEParameters and EPKEOutput to build a proper
-    //       parareal object and uncomment the require statements
-    SolverParameters coarse_parameters(coarse_time, coarse_precursors);
-    SolverOutput coarse_output;
-    //epke::Solver epke_solver;
-    precIndex K = 5;
+    EPKEParameters parameters(time,
+			      precursors,
+			      rho_imp,
+			      gen_time,
+			      pow_norm,
+			      beta_eff,
+			      lambda_h,
+			      theta,
+			      gamma_d,
+			      eta);
+
+    // build EPKE precomputed values
+    timeBins power;
+    timeBins rho;
+    precBins<timeBins> concentrations;
+
+    epke::EPKEOutput precomputed(power, rho, concentrations);
+
+    // build EPKE solver
+    epke::Solver solver(parameters, precomputed);
+
+    // additional parareal parameters
+    precIndex max_iterations;
     timeIndex n_fine_per_coarse = 2;
+    std::string outpath;
 
-    /*
-    Parareal parareal(coarse_parameters,
-		      coarse_output,
-		      epke_solver,
-		      K,
+    Parareal parareal(solver,
+		      outpath,
+		      max_iterations,
 		      n_fine_per_coarse);
 
     timeBins fine_time_0 = {0.0, 0.5, 1.0};
@@ -36,6 +61,5 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
     REQUIRE(parareal.generateFineTime(0) == fine_time_0);
     REQUIRE(parareal.generateFineTime(1) == fine_time_1);
     REQUIRE(parareal.generateFineTime(2) == fine_time_2);
-    */
   }
 }
