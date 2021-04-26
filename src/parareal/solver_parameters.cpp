@@ -7,7 +7,8 @@ para::SolverParameters::SolverParameters(const pugi::xml_node& solver_node) :
   _time(util::loadVectorData(solver_node.child("time"),
 			     solver_node.attribute("n_steps").as_int())),
   _precursors(buildPrecursors(solver_node.child("precursors"),
-			      solver_node.attribute("n_steps").as_int())) {}
+			      solver_node.attribute("n_steps").as_int())),
+  _interpolated(solver_node.attribute("interpolated").as_bool()) {}
 
 EPKEParameters::EPKEParameters(const pugi::xml_node& input_node) :
   SolverParameters(input_node),
@@ -23,8 +24,7 @@ EPKEParameters::EPKEParameters(const pugi::xml_node& input_node) :
 				 input_node.attribute("n_steps").as_int())),
   _theta(input_node.attribute("theta").as_double()),
   _gamma_d(input_node.attribute("gamma_d").as_double()),
-  _eta(input_node.attribute("eta").as_double()),
-  _interpolated(input_node.attribute("interpolated").as_bool()) {}
+  _eta(input_node.attribute("eta").as_double()) {}
 
 const EPKEParameters
 EPKEParameters::interpolate(const timeBins& fine_time) const {

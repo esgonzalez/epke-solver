@@ -19,6 +19,10 @@ para::timeBins para::Parareal::generateFineTime(para::timeIndex const n) {
 
   assert(n < params->getNumTimeSteps() - 1);
 
+  if (params->getInterpolated()) {
+    return params->getTime();
+  }
+
   // push back the time steps before index n
   for (int i = 0; i < n; i++) {
     fine_time.push_back(params->getTime(i));

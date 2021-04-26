@@ -23,7 +23,7 @@ public:
 protected:
   const timeBins _time;                       // time points
   const precBins<Precursor::ptr> _precursors; // pointers to precursor objects
-
+  const bool _interpolated; // indicates params have already been interpolated
 private:
   static const precBins<Precursor::ptr>
   buildPrecursors(const pugi::xml_node& precursors_node,
@@ -40,14 +40,17 @@ public:
   SolverParameters(const pugi::xml_node& solver_node);
 
   // Construct from data vectors
-  SolverParameters(const timeBins& time,
-		   const precBins<Precursor::ptr>& precursors)
-    : _time(time), _precursors(precursors) {}
+  SolverParameters(const timeBins&                 time,
+		   const precBins<Precursor::ptr>& precursors,
+		   const bool                      interpolated)
+    : _time(time), _precursors(precursors), _interpolated(interpolated) {}
 
   // Getters
   const precIndex getNumPrecursors()   const { return _precursors.size(); }
   const timeIndex getNumTimeSteps()    const { return _time.size();       }
+  const bool      getInterpolated()    const { return _interpolated;      }
   const double    getTime(timeIndex n) const { return _time.at(n);        }
+  const timeBins& getTime()            const { return _time;              }
 
   const double getDelayedFraction(precIndex k, timeIndex n) const {
     return _precursors.at(k)->delayedFraction(n);
@@ -82,8 +85,6 @@ private:
   // eta = 1 -> first order heat conduction for power increment
   const double _eta;
 
-  const bool _interpolated; // indicates params have already been interpolated
-
 public:
   // Construct from pugi xml node
   EPKEParameters(const pugi::xml_node& input_node);
@@ -100,7 +101,7 @@ public:
 		 const double gamma_d,
 		 const double eta,
 		 const bool   interpolated = false)
-    : SolverParameters(time, precursors),
+    : SolverParameters(time, precursors, interpolated),
       _rho_imp(rho_imp),
       _gen_time(gen_time),
       _pow_norm(pow_norm),
@@ -108,8 +109,7 @@ public:
       _lambda_h(lambda_h),
       _theta(theta),
       _gamma_d(gamma_d),
-      _eta(eta),
-      _interpolated(interpolated) {}
+      _eta(eta) {}
 
   // Getters
   const double getTheta()                    const { return _theta;           }
