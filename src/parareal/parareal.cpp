@@ -37,3 +37,21 @@ para::timeBins para::Parareal::generateFineTime(para::timeIndex const n) {
 
   return fine_time;
 }
+
+void para::Parareal::solve() {
+  // loop over each index of the preocmputed values
+  for (timeIndex n = 0; n < _solver.getNumPrecompTimeSteps(); n++) {
+    const auto fine_time = generateFineTime(n);
+
+    epke::Solver fine_solver(_solver, fine_time, n);
+
+    const auto fine_output = fine_solver.solve();
+  }
+}
+
+
+void para::Parareal::buildXMLDoc(pugi::xml_document& doc) const {
+  std::ofstream out(_outpath);
+  _solver.buildXMLDoc(doc);
+  doc.save(out);
+}

@@ -7,12 +7,13 @@
 namespace para {
 
 class SolverOutput {
-protected:
+public:
   template <typename T>
   using precBins  = para::precBins<T>;
   using timeBins  = para::timeBins;
   using timeIndex = para::timeIndex;
   using precIndex = para::precIndex;
+  using ptr       = std::shared_ptr<SolverOutput>;
 };
 } // namespace para
 
@@ -40,9 +41,6 @@ public:
   const timeIndex getNumTimeSteps()  const { return _power.size();          }
   const precIndex getNumPrecursors() const { return _concentrations.size(); }
 
-  // TODO: Create a function, getHistory(n), to return an EPKEOutput object
-  //       truncated after n so we don't have to call getPower(n),
-  //       getConcentration(k,n) every time we want to access precomputed data
   const double getPower(const timeIndex n) const { return _power.at(n); }
   const double getRho(const timeIndex n)   const { return _rho.at(n);   }
   const double getConcentration(const precIndex k, const timeIndex n) const {

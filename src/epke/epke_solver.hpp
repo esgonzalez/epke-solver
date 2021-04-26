@@ -72,10 +72,21 @@ public:
   // Construct from parameters and precomputed objects
   Solver(const EPKEParameters& parameters, const EPKEOutput& precomputed);
 
-  void solve();
+  // Construct from coarse solver
+  Solver(const Solver& solver, const timeBins& fine_time, const timeIndex n);
+
+  para::SolverOutput::ptr solve();
 
   para::SolverParameters::ptr getParameters() const {
     return std::make_shared<para::SolverParameters>(params);
+  }
+
+  para::SolverOutput::ptr getPrecomputed() const {
+    return std::make_shared<para::SolverOutput>(precomp);
+  }
+
+  const timeIndex getNumPrecompTimeSteps() const {
+    return precomp.getNumTimeSteps();
   }
 
   void buildXMLDoc(pugi::xml_document& doc) const;

@@ -72,6 +72,12 @@ Solver::Solver(const EPKEParameters& params, const EPKEOutput& precomp)
   }
 }
 
+Solver::Solver(const Solver& solver, const timeBins& time, const timeIndex n)
+  : Solver(solver.params.interpolate(time),
+	   solver.precomp.createPrecomputed(n)) {}
+
+
+
 const double Solver::computeOmega(const precIndex k,
 				  const timeIndex n,
 				  const double    w,
@@ -216,7 +222,7 @@ const bool Solver::acceptTransformation(const timeIndex n,
   return (lhs <= rhs);
 }
 
-void Solver::solve() {
+para::SolverOutput::ptr Solver::solve() {
   // set initial conditions for the power and reactivity vectors
   double alpha = 0.0;
 
@@ -248,6 +254,8 @@ void Solver::solve() {
     // update the full power and reactivity vectors
     rho[n] = a1b1.first * power.at(n) + a1b1.second;
   }
+
+  return std::make_shared<EPKEOutput>(power, rho, concentrations);
 }
 
 void Solver::buildXMLDoc(pugi::xml_document& doc) const {

@@ -38,7 +38,7 @@ TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
 
     // Create and run the EPKE solver
     epke::Solver solver(params, precomp);
-    solver.solve();
+    const auto output = solver.solve();
 
     pugi::xml_document tdoc;
 

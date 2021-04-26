@@ -44,6 +44,9 @@ public:
       _max_iterations(max_iterations),
       _n_fine_per_coarse(n_fine_per_coarse) {}
 
+  // Get outpath
+  std::string getOutpath() const { return _outpath; }
+
   // Generate fine time
   timeBins generateFineTime(const timeIndex n);
 
@@ -51,18 +54,10 @@ public:
   timeBins update_coarse_solution();
 
   // Solve
-  void solve() { _solver.solve(); }
+  void solve();
 
-  // Get outpath
-  std::string getOutpath() const { return _outpath; }
-
-  // TODO: Move this to cpp file
   // Build xml output doc
-  void buildXMLDoc(pugi::xml_document& doc) const {
-    std::ofstream out(_outpath);
-    _solver.buildXMLDoc(doc);
-    doc.save(out);
-  }
+  void buildXMLDoc(pugi::xml_document& doc) const;
 
 };
 } // namespace para
