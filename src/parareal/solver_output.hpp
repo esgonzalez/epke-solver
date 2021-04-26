@@ -1,6 +1,8 @@
 #ifndef _PARAREAL_SOLVER_OUTPUT_HEADER_
 #define _PARAREAL_SOLVER_OUTPUT_HEADER_
 
+#include <memory>
+
 #include "parareal/definitions.hpp"
 #include "pugi/pugixml.hpp"
 
