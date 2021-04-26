@@ -72,11 +72,21 @@ Solver::Solver(const EPKEParameters& params, const EPKEOutput& precomp)
   }
 }
 
-Solver::Solver(const Solver& solver, const timeBins& time, const timeIndex n)
-  : Solver(solver.params.interpolate(time),
-	   solver.precomp.createPrecomputed(n)) {}
+Solver::ptr Solver::createFineSolver(const timeBins& fine_time,
+				     const timeIndex coarse_index) {
+  auto fine_solver =
+    std::make_shared<Solver>(params.interpolate(fine_time),
+			     precomp.createPrecomputed(coarse_index));
+  // Push back the coarse solver's vector of fine solvers
+  _fine_solvers.push_back(fine_solver);
 
+  return fine_solver;
+}
 
+const para::SolverOutput::ptr Solver::assembleGlobalOutput() {
+  // TEMP
+  return std::make_shared<para::SolverOutput>(precomp);
+}
 
 const double Solver::computeOmega(const precIndex k,
 				  const timeIndex n,

@@ -40,6 +40,8 @@ public:
       _rho(rho),
       _concentrations(concentrations) {}
 
+  //EPKEOutput(const std::vector<EPKEOutput>& outputs);
+
   const timeIndex getNumTimeSteps()  const { return _power.size();          }
   const precIndex getNumPrecursors() const { return _concentrations.size(); }
 

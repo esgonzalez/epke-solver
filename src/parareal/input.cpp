@@ -26,7 +26,6 @@ void Input::execute() {
   std::cout << "Completed solve." << std::endl;
 
   // build the xml document
-  pugi::xml_document doc;
   std::cout << "Writing output to " << parareal.getOutpath() << std::endl;
-  parareal.buildXMLDoc(doc);
+  parareal.writeToXML();
 }

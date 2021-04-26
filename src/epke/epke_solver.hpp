@@ -13,10 +13,12 @@ namespace epke {
 class Solver {
 public:
   template <typename T>
-  using precBins  = para::precBins<T>; // binning over precursor groups
-  using timeBins  = para::timeBins;    // binning over time variable
-  using timeIndex = para::timeIndex;
-  using precIndex = para::precIndex;
+  using precBins    = para::precBins<T>; // binning over precursor groups
+  using timeBins    = para::timeBins;    // binning over time variable
+  using timeIndex   = para::timeIndex;
+  using precIndex   = para::precIndex;
+  using ptr         = std::shared_ptr<Solver>;
+  using FineSolvers = std::vector<Solver::ptr>;
 
 private:
   // input member variables
@@ -25,6 +27,9 @@ private:
   // precomputed values of power, rho, and concentrations (so the simulation
   // can start at t > 0)
   const EPKEOutput precomp;
+
+  // vector of pointers to fine solvers created by this coarse solver
+  FineSolvers _fine_solvers;
 
   // output member variables
   timeBins power;                    // power at various points in time
@@ -72,9 +77,14 @@ public:
   // Construct from parameters and precomputed objects
   Solver(const EPKEParameters& parameters, const EPKEOutput& precomputed);
 
-  // Construct from coarse solver
-  Solver(const Solver& solver, const timeBins& fine_time, const timeIndex n);
+  // Construct a fine solver by interpolating parameters from coarse solver
+  Solver::ptr createFineSolver(const timeBins& fine_time,
+			       const timeIndex coarse_index);
 
+  // Assemble global output from vector of fine solver output
+  const para::SolverOutput::ptr assembleGlobalOutput();
+
+  // TODO: Make this a virtual function from the Solver base class
   para::SolverOutput::ptr solve();
 
   para::SolverParameters::ptr getParameters() const {

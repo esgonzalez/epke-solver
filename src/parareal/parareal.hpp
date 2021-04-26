@@ -57,7 +57,7 @@ public:
   void solve();
 
   // Build xml output doc
-  void buildXMLDoc(pugi::xml_document& doc) const;
+  void writeToXML() const;
 
 };
 } // namespace para
