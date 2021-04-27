@@ -71,11 +71,11 @@ public:
   para::SolverOutput::ptr solve();
 
   para::SolverParameters::ptr getParameters() const {
-    return std::make_shared<para::SolverParameters>(params);
+    return std::make_shared<EPKEParameters>(params);
   }
 
   para::SolverOutput::ptr getPrecomputed() const {
-    return std::make_shared<para::SolverOutput>(precomp);
+    return std::make_shared<EPKEOutput>(precomp);
   }
 
   const timeIndex getNumPrecompTimeSteps() const {

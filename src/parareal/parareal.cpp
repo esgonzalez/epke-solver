@@ -1,12 +1,13 @@
 #include <vector>
 #include <cassert>
+#include <iostream> // TEMP
 
 #include "parareal/parareal.hpp"
 
 #include "utility/interpolate.hpp"
 
 para::Parareal::Parareal(const pugi::xml_node& parareal_node) :
-  _solver(parareal_node.child("epke_intput"),
+  _solver(parareal_node.child("epke_input"),
 	  parareal_node.child("epke_output")),
   _outpath(parareal_node.attribute("outpath").value()),
   _max_iterations(parareal_node.attribute("max_iterations").as_int()),
@@ -41,18 +42,19 @@ para::timeBins para::Parareal::generateFineTime(para::timeIndex const n) {
 void para::Parareal::solve() {
   // loop over each index of the preocmputed values
   for (timeIndex n = 0; n < _solver.getNumPrecompTimeSteps(); n++) {
-    const auto fine_time = generateFineTime(n);
+    const auto fine_time   = generateFineTime(n);
     const auto fine_solver = _solver.createFineSolver(fine_time, n);
     const auto fine_output = fine_solver->solve();
   }
 
-  const auto global_output = _solver.assembleGlobalOutput();
+  // have the coarse solver assemble the global output
+  _global_output = _solver.assembleGlobalOutput();
 }
 
 
 void para::Parareal::writeToXML() const {
   pugi::xml_document doc;
   std::ofstream out(_outpath);
-  _solver.buildXMLDoc(doc);
+  _global_output->writeToXML(doc);
   doc.save(out);
 }

@@ -26,6 +26,9 @@ private:
   // Output path
   std::string _outpath;
 
+  // Global output
+  para::SolverOutput::ptr _global_output;
+
   // Max number of parareal iterations
   const precIndex _max_iterations;
 

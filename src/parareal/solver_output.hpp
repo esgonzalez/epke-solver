@@ -16,6 +16,9 @@ public:
   using timeIndex = para::timeIndex;
   using precIndex = para::precIndex;
   using ptr       = std::shared_ptr<SolverOutput>;
+
+  virtual const timeIndex getNumTimeSteps() const = 0;
+  virtual void writeToXML(pugi::xml_document& doc) const = 0;
 };
 } // namespace para
 
@@ -42,7 +45,7 @@ public:
 
   //EPKEOutput(const std::vector<EPKEOutput>& outputs);
 
-  const timeIndex getNumTimeSteps()  const { return _power.size();          }
+  const timeIndex getNumTimeSteps()  const override { return _power.size(); }
   const precIndex getNumPrecursors() const { return _concentrations.size(); }
 
   const double getPower(const timeIndex n) const { return _power.at(n); }
@@ -52,6 +55,8 @@ public:
   }
 
   const EPKEOutput createPrecomputed(const timeIndex n) const;
+
+  void writeToXML(pugi::xml_document& doc) const override;
 
 };
 } // namespace epke

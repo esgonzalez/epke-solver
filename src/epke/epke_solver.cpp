@@ -62,12 +62,52 @@ Solver::ptr Solver::createFineSolver(const timeBins& fine_time,
 }
 
 const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
-  // TEMP
-  return std::make_shared<para::SolverOutput>(precomp);
+  // compute the global size
+  timeIndex global_size = 1;
+
+  timeIndex coarse_size =
+    params.getInterpolated() ? 1 : params.getNumTimeSteps();
+
+  for (timeIndex n = 0; n < coarse_size; n++) {
+    const auto fine_params = _fine_solvers.at(n)->params;
+    const auto fine_precomp = _fine_solvers.at(n)->precomp;
+    global_size +=
+      fine_params.getNumTimeSteps() - fine_precomp.getNumTimeSteps();
+  }
+
+  timeBins global_power(global_size), global_rho(global_size);
+  precBins<timeBins> global_concentrations(params.getNumPrecursors(),
+					   timeBins(global_size));
+
+  timeIndex n_global = 0;
+
+  for (timeIndex n = 0; n < coarse_size; n++) {
+    const auto          fine_solver         = _fine_solvers.at(n);
+    const auto&         fine_params         = fine_solver->params;
+    timeBins&           fine_power          = fine_solver->power;
+    timeBins&           fine_rho            = fine_solver->rho;
+    precBins<timeBins>& fine_concentrations = fine_solver->concentrations;
+
+    for (timeIndex n_fine = n; n_fine < fine_power.size(); n_fine++) {
+      global_power[n_global] =
+	fine_params.getPowNorm(n_fine) * fine_power.at(n_fine);
+      global_rho[n_global]   = fine_rho.at(n_fine);
+
+      for (precIndex k = 0; k < params.getNumPrecursors(); k++) {
+	global_concentrations[k][n] = fine_concentrations.at(k).at(n_fine);
+      }
+      n_global++;
+    }
+  }
+
+  EPKEOutput global_output(global_power, global_rho, global_concentrations);
+
+  return std::make_shared<EPKEOutput>(global_output);
 }
 
 const double Solver::computeDT(const timeIndex n) const {
-  return params.getTime(n) - params.getTime(n-1);
+  return n > 0 ? params.getTime(n) - params.getTime(n-1) :
+    params.getTime(n+1) - params.getTime(n);
 }
 
 const double Solver::computeGamma(const timeIndex n) const {
@@ -154,9 +194,9 @@ const double Solver::computeB1(const timeIndex n) const {
 const double Solver::computePower(const timeIndex n, const double alpha) const {
   const auto dt = computeDT(n);
 
+  // accumulate the weighted sums
   double tau = 0.0, s_hat_d = 0.0, s_d_prev = 0.0;
   for (int k = 0; k < params.getNumPrecursors(); k++) {
-    // accumulate the weighted sum
     tau += params.getDecayConstant(k,n) * computeOmega(k, n);
     s_hat_d += params.getDecayConstant(k,n) * computeZetaHat(k, n);
     s_d_prev += params.getDecayConstant(k,n-1) * concentrations.at(k).at(n-1);
