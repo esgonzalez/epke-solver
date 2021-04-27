@@ -36,9 +36,6 @@ private:
   timeBins rho;                      // reactivity with feedback
   precBins<timeBins> concentrations; // precursor concentrations
 
-  // TODO: move this to EPKEParameters
-  timeBins delta_t;
-
   // time-dependent local variables (rewritten to every time step)
   precBins<double> omega, zeta_hat;
 
@@ -66,6 +63,10 @@ private:
 
   std::pair<double, double> computeA1B1(const timeIndex n, const double gamma);
 
+  const double computeDT(const timeIndex n) const;
+
+  const double computeGamma(const timeIndex n) const;
+
   const bool acceptTransformation(const timeIndex n,
 				  const double    alpha,
 				  const double    gamma) const;
@@ -82,7 +83,7 @@ public:
 			       const timeIndex coarse_index);
 
   // Assemble global output from vector of fine solver output
-  const para::SolverOutput::ptr assembleGlobalOutput();
+  const para::SolverOutput::ptr assembleGlobalOutput() const;
 
   // TODO: Make this a virtual function from the Solver base class
   para::SolverOutput::ptr solve();

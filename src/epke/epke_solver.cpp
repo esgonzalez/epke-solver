@@ -11,21 +11,12 @@ Solver::Solver(const pugi::xml_node& input_node,
 	       const pugi::xml_node& output_node)
   : params(input_node),
     precomp(output_node),
-    delta_t(params.getNumTimeSteps()),
     power(params.getNumTimeSteps()),
     rho(params.getNumTimeSteps()),
     omega(params.getNumPrecursors()),
     zeta_hat(params.getNumPrecursors()),
     concentrations(params.getNumPrecursors(),
 		   timeBins(params.getNumTimeSteps())) {
-  // compute the delta_t vector
-  for (int i = 0; i < params.getNumTimeSteps() - 1; i++) {
-    delta_t[i] = params.getTime(i+1) - params.getTime(i);
-  }
-  delta_t[params.getNumTimeSteps() - 1] =
-    params.getTime(params.getNumTimeSteps() - 1)
-    - params.getTime(params.getNumTimeSteps() - 2);
-
   // set the initial concentration histories
   for (int k = 0; k < params.getNumPrecursors(); k++) {
     for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
@@ -43,21 +34,12 @@ Solver::Solver(const pugi::xml_node& input_node,
 Solver::Solver(const EPKEParameters& params, const EPKEOutput& precomp)
   : params(params),
     precomp(precomp),
-    delta_t(params.getNumTimeSteps()),
     power(params.getNumTimeSteps()),
     rho(params.getNumTimeSteps()),
     omega(params.getNumPrecursors()),
     zeta_hat(params.getNumPrecursors()),
     concentrations(params.getNumPrecursors(),
 		   timeBins(params.getNumTimeSteps())) {
-  // compute the delta_t vector
-  for (int i = 0; i < params.getNumTimeSteps() - 1; i++) {
-    delta_t[i] = params.getTime(i+1) - params.getTime(i);
-  }
-  delta_t[params.getNumTimeSteps() - 1] =
-    params.getTime(params.getNumTimeSteps() - 1)
-    - params.getTime(params.getNumTimeSteps() - 2);
-
   // set the initial concentration histories
   for (int k = 0; k < params.getNumPrecursors(); k++) {
     for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
@@ -83,9 +65,17 @@ Solver::ptr Solver::createFineSolver(const timeBins& fine_time,
   return fine_solver;
 }
 
-const para::SolverOutput::ptr Solver::assembleGlobalOutput() {
+const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
   // TEMP
   return std::make_shared<para::SolverOutput>(precomp);
+}
+
+const double Solver::computeDT(const timeIndex n) const {
+  return params.getTime(n) - params.getTime(n-1);
+}
+
+const double Solver::computeGamma(const timeIndex n) const {
+  return n < 2 ? 1.0 : computeDT(n-1) / computeDT(n);
 }
 
 const double Solver::computeOmega(const precIndex k,
@@ -93,19 +83,21 @@ const double Solver::computeOmega(const precIndex k,
 				  const double    w,
 				  const double    gamma) const {
   const auto lambda_k = params.getDecayConstant(k,n);
+  const auto dt       = computeDT(n);
   return params.getGenTime(0) / params.getGenTime(n) *
     params.getDelayedFraction(k,n) * w *
-    (util::k2(lambda_k, delta_t.at(n)) +
-     gamma * delta_t.at(n) * util::k1(lambda_k, delta_t.at(n))) /
-    ((1 + gamma) * delta_t.at(n) * delta_t.at(n));
+    (util::k2(lambda_k, dt) +
+     gamma * dt * util::k1(lambda_k, dt)) / ((1 + gamma) * dt * dt);
 }
 
 const double Solver::computeZetaHat(const precIndex k,
 				    const timeIndex n,
 				    const double    w,
 				    const double    gamma) const {
-  const auto lambda_k = params.getDecayConstant(k,n);
   double beta_prev_prev, power_prev_prev, gen_time_prev_prev;
+
+  const auto lambda_k = params.getDecayConstant(k,n);
+  const auto dt       = computeDT(n);
 
   if (n < 2) {
     beta_prev_prev = params.getDelayedFraction(k,n-1);
@@ -120,21 +112,23 @@ const double Solver::computeZetaHat(const precIndex k,
   return w * concentrations.at(k).at(n - 1) +
     w * params.getGenTime(0) * power.at(n - 1) *
     params.getDelayedFraction(k,n-1) / params.getGenTime(n - 1) *
-    (util::k0(lambda_k, delta_t.at(n)) -
-     (util::k2(lambda_k, delta_t.at(n)) -
-      delta_t.at(n) * (gamma - 1) *
-      util::k1(lambda_k, delta_t.at(n))) /
-     (gamma * delta_t.at(n) * delta_t.at(n))) +
+    (util::k0(lambda_k, dt) - (util::k2(lambda_k, dt) - dt * (gamma - 1) *
+			       util::k1(lambda_k, dt)) /
+     (gamma * dt * dt)) +
     w * params.getGenTime(0) * power_prev_prev * beta_prev_prev /
     gen_time_prev_prev *
-    (util::k2(lambda_k, delta_t.at(n)) -
-     delta_t.at(n) * util::k1(lambda_k, delta_t.at(n))) /
-    ((1 + gamma) * gamma * delta_t.at(n) * delta_t.at(n));
+    (util::k2(lambda_k, dt) - dt * util::k1(lambda_k, dt)) /
+    ((1 + gamma) * gamma * dt * dt);
 }
 
 std::pair<double, double> Solver::computeA1B1(const timeIndex n,
 					      const double    gamma) {
+  using util::k0, util::k1, util::k2, util::E;
+
   double H_prev_prev;
+  // define local variables to avoid numerous function calls
+  const double lh = params.getLambdaH(n);
+  const double dt = computeDT(n);
 
   // we have to set these values so we don't get an out of range vector
   if (n < 2) {
@@ -143,29 +137,15 @@ std::pair<double, double> Solver::computeA1B1(const timeIndex n,
     H_prev_prev = params.getPowNorm(n-2) * power.at(n - 2);
   }
 
-  // define local variables to avoid numerous function calls
-  double lambda_h_n = params.getLambdaH(n);
-  double delta_t_n = delta_t.at(n);
-
   double a1 = params.getGammaD() * params.getPowNorm(n) /
-    util::E(lambda_h_n, delta_t_n) *
-    (util::k2(lambda_h_n, delta_t_n) +
-     util::k1(lambda_h_n, delta_t_n) * gamma * delta_t_n) /
-    ((1 + gamma) * delta_t_n * delta_t_n);
-  double b1 = params.getRhoImp(n) +
-    1 / util::E(lambda_h_n, delta_t_n) *
+    E(lh, dt) * (k2(lh, dt) + k1(lh, dt) * gamma * dt) / ((1 + gamma) * dt * dt);
+  double b1 = params.getRhoImp(n) + 1 / E(lh, dt) *
     ((rho.at(n-1) - params.getRhoImp(n-1)) - power.at(0) * params.getGammaD() *
-     params.getEta() * util::k0(lambda_h_n, delta_t_n)) +
-    params.getGammaD() / util::E(lambda_h_n, delta_t_n) *
+     params.getEta() * k0(lh, dt)) + params.getGammaD() / E(lh, dt) *
     (params.getPowNorm(n-1) * power.at(n - 1) *
-     (util::k0(lambda_h_n, delta_t_n) -
-      (util::k2(lambda_h_n, delta_t_n) +
-       (gamma - 1) * delta_t_n * util::k1(lambda_h_n, delta_t_n)) /
-      (gamma * delta_t_n * delta_t_n)) +
-     H_prev_prev *
-     (util::k2(lambda_h_n, delta_t_n) -
-      util::k1(lambda_h_n, delta_t_n) * delta_t_n) /
-     ((1 + gamma) * gamma * delta_t_n * delta_t_n));;
+     (k0(lh, dt) - (k2(lh, dt) + (gamma - 1) * dt * k1(lh, dt)) /
+      (gamma * dt * dt)) + H_prev_prev * (k2(lh, dt) - k1(lh, dt) * dt) /
+     ((1 + gamma) * gamma * dt * dt));;
 
   return std::make_pair(a1, b1);
 }
@@ -175,7 +155,7 @@ const double Solver::computePower(const timeIndex n,
 				  const double gamma) {
   double tau = 0.0, s_hat_d = 0.0, s_d_prev = 0.0;
   for (int k = 0; k < params.getNumPrecursors(); k++) {
-    double w = 1 / util::E(params.getDecayConstant(k,n), delta_t.at(n));
+    double w = 1 / util::E(params.getDecayConstant(k,n), computeDT(n));
 
     omega[k] = computeOmega(k, n, w, gamma);
     zeta_hat[k] = computeZetaHat(k, n, w, gamma);
@@ -194,20 +174,20 @@ const double Solver::computePower(const timeIndex n,
 const double Solver::computeABC(const timeIndex n,
 				const double alpha,
 				const std::pair<double, double>& a1b1,
-				const double tau,const double s_hat_d,
+				const double tau, const double s_hat_d,
 				const double s_d_prev) const {
-  double a = params.getTheta() * delta_t.at(n)
-    * a1b1.first / params.getGenTime(n);
-  double b = params.getTheta() * delta_t.at(n) * (((a1b1.second - params.getBetaEff(n))
-				       / params.getGenTime(n) - alpha) +
-				      tau / params.getGenTime(0)) - 1;
-  double c = params.getTheta() * delta_t.at(n) / params.getGenTime(0) * s_hat_d +
-    exp(alpha * delta_t.at(n)) *
-    ((1 - params.getTheta()) * delta_t.at(n) *
-     (((rho.at(n - 1) - params.getBetaEff(n - 1)) / params.getGenTime(n - 1) -
-       alpha) * power.at(n - 1) +
-      s_d_prev / params.getGenTime(0)) +
-     power.at(n - 1));
+  const auto dt = computeDT(n);
+  double a = params.getTheta() * dt * a1b1.first / params.getGenTime(n);
+  double b = params.getTheta() * dt * (((a1b1.second - params.getBetaEff(n))
+					/ params.getGenTime(n) - alpha) +
+				       tau / params.getGenTime(0)) - 1;
+  double c = params.getTheta() * dt / params.getGenTime(0) * s_hat_d +
+    exp(alpha * dt) * ((1 - params.getTheta()) * dt *
+		       (((rho.at(n - 1) - params.getBetaEff(n - 1)) /
+			 params.getGenTime(n - 1) -
+			 alpha) * power.at(n - 1) + s_d_prev /
+			params.getGenTime(0)) +
+		       power.at(n - 1));
 
   if (a < 0) {
     return (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
@@ -225,7 +205,7 @@ const bool Solver::acceptTransformation(const timeIndex n,
 
   const double power_prev_prev = n < 2 ? power.at(n - 1) : power.at(n - 2);
 
-  double lhs = fabs(power.at(n) - exp(alpha * delta_t.at(n)) * power.at(n - 1));
+  double lhs = fabs(power.at(n) - exp(alpha * computeDT(n)) * power.at(n - 1));
   double rhs = fabs(
       power.at(n) - power.at(n - 1) -
       (power.at(n - 1) - power_prev_prev) / gamma);
@@ -236,13 +216,12 @@ para::SolverOutput::ptr Solver::solve() {
   // set initial conditions for the power and reactivity vectors
   double alpha = 0.0;
 
-  for (int n = precomp.getNumTimeSteps();
-       n < params.getNumTimeSteps(); n++) {
-    double gamma = delta_t.at(n - 1) / delta_t.at(n);
+  for (int n = precomp.getNumTimeSteps(); n < params.getNumTimeSteps(); n++) {
+    double gamma = computeGamma(n);
 
     // compute the transformation parameter
     if (n > 1) {
-      alpha = 1 / delta_t.at(n - 1) * log(power.at(n - 1) / power.at(n - 2));
+      alpha = 1 / computeDT(n - 1) * log(power.at(n - 1) / power.at(n - 2));
     }
 
     // evaluate the power at this time step

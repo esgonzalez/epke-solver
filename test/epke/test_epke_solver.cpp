@@ -48,6 +48,10 @@ TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
     para::timeBins tpower =
       util::loadVectorData(tdoc.child("epke_output").child("power"), n_steps);
 
-    REQUIRE(tpower == opower);
+    REQUIRE(tpower.size() == opower.size());
+
+    for (para::timeIndex n = 0; n < tpower.size(); n++) {
+      REQUIRE(tpower.at(n) == Approx(opower.at(n)));
+    }
   }
 }
