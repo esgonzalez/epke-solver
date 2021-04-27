@@ -36,40 +36,22 @@ private:
   timeBins rho;                      // reactivity with feedback
   precBins<timeBins> concentrations; // precursor concentrations
 
-  // time-dependent local variables (rewritten to every time step)
-  precBins<double> omega, zeta_hat;
-
   // private methods
-  const double computeOmega(const precIndex k,
-			    const timeIndex n,
-			    const double    w,
-			    const double    gamma) const;
+  const double computeOmega(const precIndex k, const timeIndex n) const;
 
-  const double computeZetaHat(const precIndex k,
-			      const timeIndex n,
-			      const double    w,
-			      const double    gamma) const;
+  const double computeZetaHat(const precIndex k, const timeIndex n) const;
 
-  const double computePower(const timeIndex n,
-			    const double    alpha,
-			    const double    gamma);
+  const double computePower(const timeIndex n, const double alpha) const;
 
-  const double computeABC(const timeIndex                  n,
-			  const double                     alpha,
-			  const std::pair<double, double>& a1b1,
-			  const double                     tau,
-			  const double                     s_hat_d,
-			  const double                     s_d_prev) const;
+  const double computeA1(const timeIndex n) const;
 
-  std::pair<double, double> computeA1B1(const timeIndex n, const double gamma);
+  const double computeB1(const timeIndex n) const;
 
   const double computeDT(const timeIndex n) const;
 
   const double computeGamma(const timeIndex n) const;
 
-  const bool acceptTransformation(const timeIndex n,
-				  const double    alpha,
-				  const double    gamma) const;
+  const bool acceptTransformation(const timeIndex n, const double alpha) const;
 
 public:
   // Construct from pugixml nodes
