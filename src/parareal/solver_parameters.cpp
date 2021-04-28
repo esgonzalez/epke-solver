@@ -27,7 +27,7 @@ EPKEParameters::EPKEParameters(const pugi::xml_node& input_node) :
   _eta(input_node.attribute("eta").as_double()) {}
 
 para::SolverParameters::ptr
-EPKEParameters::interpolate_impl(const timeBins& fine_time) const {
+EPKEParameters::interpolateImpl(const timeBins& fine_time) const {
   using util::interpolate;
 
   // interpolate the precursors

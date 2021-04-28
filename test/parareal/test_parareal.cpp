@@ -22,7 +22,10 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
   timeBins rho;
   precBins<timeBins> concentrations;
 
-  epke::EPKEOutput precomputed(precomp_time, concentrations, power, rho);
+  auto precomputed = std::make_shared<epke::EPKEOutput>(precomp_time,
+							concentrations,
+							power,
+							rho);
 
   // additional parareal parameters
   precIndex max_iterations;

@@ -26,7 +26,7 @@ private:
 
   // precomputed values of power, rho, and concentrations (so the simulation
   // can start at t > 0)
-  const EPKEOutput precomp;
+  const EPKEOutput::ptr precomp;
 
   // vector of pointers to fine solvers created by this coarse solver
   FineSolvers _fine_solvers;
@@ -58,7 +58,8 @@ public:
   Solver(const pugi::xml_node& input_node, const pugi::xml_node& output_node);
 
   // Construct from parameters and precomputed objects
-  Solver(const EPKEParameters::ptr parameters, const EPKEOutput& precomputed);
+  Solver(const EPKEParameters::ptr parameters,
+	 const EPKEOutput::ptr precomputed);
 
   // Construct a fine solver by interpolating parameters from coarse solver
   Solver::ptr createFineSolver(const timeBins& fine_time,
@@ -74,12 +75,12 @@ public:
     return params;
   }
 
-  para::SolverOutput::ptr getPrecomputed() const {
-    return std::make_shared<EPKEOutput>(precomp);
+  EPKEOutput::ptr getPrecomputed() const {
+    return precomp;
   }
 
   const timeIndex getNumPrecompTimeSteps() const {
-    return precomp.getNumTimeSteps();
+    return precomp->getNumTimeSteps();
   }
 };
 } // namespace epke

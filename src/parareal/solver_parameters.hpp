@@ -62,14 +62,14 @@ public:
   }
 
   virtual SolverParameters::ptr
-  interpolate_impl(const timeBins& fine_time) const = 0;
+  interpolateImpl(const timeBins& fine_time) const = 0;
 
 };
 
   template<typename T>
   std::shared_ptr<T> interpolate(std::shared_ptr<T> params,
 				 const timeBins& fine_time) {
-    return std::static_pointer_cast<T>(params->interpolate_impl(fine_time));
+    return std::static_pointer_cast<T>(params->interpolateImpl(fine_time));
   }
 
 } // namespace para
@@ -137,7 +137,7 @@ public:
 
   // Interpolate parameters for the fine time mesh
   virtual SolverParameters::ptr
-  interpolate_impl(const timeBins& fine_time) const override;
+  interpolateImpl(const timeBins& fine_time) const override;
 
 };
 

@@ -10,26 +10,26 @@ using namespace epke;
 Solver::Solver(const pugi::xml_node& input_node,
 	       const pugi::xml_node& output_node)
   : params(std::make_shared<EPKEParameters>(input_node)),
-    precomp(output_node),
+    precomp(std::make_shared<EPKEOutput>(output_node)),
     power(params->getNumTimeSteps()),
     rho(params->getNumTimeSteps()),
     concentrations(params->getNumPrecursors(),
 		   timeBins(params->getNumTimeSteps())) {
   // set the initial concentration histories
   for (int k = 0; k < params->getNumPrecursors(); k++) {
-    for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
-      concentrations[k][n] = precomp.getConcentration(k,n);
+    for (int n = 0; n < precomp->getNumTimeSteps(); n++) {
+      concentrations[k][n] = precomp->getConcentration(k,n);
     }
   }
 
   // set the initial power histories and rho histories
-  for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
-    power[n] = precomp.getPower(n);
-    rho[n] = precomp.getRho(n);
+  for (int n = 0; n < precomp->getNumTimeSteps(); n++) {
+    power[n] = precomp->getPower(n);
+    rho[n] = precomp->getRho(n);
   }
 }
 
-Solver::Solver(EPKEParameters::ptr params, const EPKEOutput& precomp)
+Solver::Solver(const EPKEParameters::ptr params, const EPKEOutput::ptr precomp)
   : params(params),
     precomp(precomp),
     power(params->getNumTimeSteps()),
@@ -38,26 +38,26 @@ Solver::Solver(EPKEParameters::ptr params, const EPKEOutput& precomp)
 		   timeBins(params->getNumTimeSteps())) {
   // set the initial concentration histories
   for (int k = 0; k < params->getNumPrecursors(); k++) {
-    for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
-      concentrations[k][n] = precomp.getConcentration(k,n);
+    for (int n = 0; n < precomp->getNumTimeSteps(); n++) {
+      concentrations[k][n] = precomp->getConcentration(k,n);
     }
   }
 
   // set the initial power histories and rho histories
-  for (int n = 0; n < precomp.getNumTimeSteps(); n++) {
-    power[n] = precomp.getPower(n);
-    rho[n] = precomp.getRho(n);
+  for (int n = 0; n < precomp->getNumTimeSteps(); n++) {
+    power[n] = precomp->getPower(n);
+    rho[n] = precomp->getRho(n);
   }
 }
 
 Solver::ptr Solver::createFineSolver(const timeBins& fine_time,
 				     const timeIndex coarse_index) {
+  // Interpolate the parameters and create the new precomputed values
   EPKEParameters::ptr fine_parameters = para::interpolate(params, fine_time);
+  EPKEOutput::ptr fine_precomp = para::createPrecomputed(precomp, coarse_index);
 
-  auto fine_solver =
-    std::make_shared<Solver>(fine_parameters,
-			     precomp.createPrecomputed(coarse_index));
   // Push back the coarse solver's vector of fine solvers
+  auto fine_solver = std::make_shared<Solver>(fine_parameters, fine_precomp);
   _fine_solvers.push_back(fine_solver);
 
   return fine_solver;
@@ -74,7 +74,7 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
     const auto fine_params = _fine_solvers.at(n)->params;
     const auto fine_precomp = _fine_solvers.at(n)->precomp;
     global_size +=
-      fine_params->getNumTimeSteps() - fine_precomp.getNumTimeSteps();
+      fine_params->getNumTimeSteps() - fine_precomp->getNumTimeSteps();
   }
 
   timeBins global_time(global_size);
@@ -190,8 +190,8 @@ const double Solver::computeB1(const timeIndex n) const {
   const auto H_prev_prev = params->getPowNorm(n_accum) * power.at(n_accum);
 
   return params->getRhoImp(n) + 1 / E(lh, dt) *
-    ((rho.at(n-1) - params->getRhoImp(n-1)) - power.at(0) * params->getGammaD() *
-     params->getEta() * k0(lh, dt)) + params->getGammaD() / E(lh, dt) *
+    ((rho.at(n-1) - params->getRhoImp(n-1)) - power.at(0) * params->getGammaD()
+     * params->getEta() * k0(lh, dt)) + params->getGammaD() / E(lh, dt) *
     (params->getPowNorm(n-1) * power.at(n - 1) *
      (k0(lh, dt) - (k2(lh, dt) + (gamma - 1) * dt * k1(lh, dt)) /
       (gamma * dt * dt)) + H_prev_prev * (k2(lh, dt) - k1(lh, dt) * dt) /
@@ -248,7 +248,7 @@ para::SolverOutput::ptr Solver::solve() {
   // set initial conditions for the power and reactivity vectors
   double alpha = 0.0;
 
-  for (int n = precomp.getNumTimeSteps(); n < params->getNumTimeSteps(); n++) {
+  for (int n = precomp->getNumTimeSteps(); n < params->getNumTimeSteps(); n++) {
     // compute the transformation parameter
     if (n > 1) {
       alpha = 1 / computeDT(n - 1) * log(power.at(n - 1) / power.at(n - 2));

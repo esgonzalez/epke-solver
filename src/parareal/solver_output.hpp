@@ -37,12 +37,24 @@ public:
     return _concentrations.at(k).at(n);
   }
 
+  virtual SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const = 0;
+
   virtual void writeToXML(pugi::xml_document& doc) const = 0;
 };
+
+  template<typename T>
+  std::shared_ptr<T> createPrecomputed(std::shared_ptr<T> precomp,
+				       const timeIndex n) {
+    return std::static_pointer_cast<T>(precomp->createPrecomputedImpl(n));
+  }
+
 } // namespace para
 
 namespace epke {
 class EPKEOutput : public para::SolverOutput {
+public:
+  using ptr = std::shared_ptr<EPKEOutput>;
+
 private:
   // time-dependent parameters
   const timeBins _power; // reactor power
@@ -62,7 +74,7 @@ public:
   const double getPower(const timeIndex n) const { return _power.at(n); }
   const double getRho(const timeIndex n)   const { return _rho.at(n);   }
 
-  const EPKEOutput createPrecomputed(const timeIndex n) const;
+  SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const override;
 
   void writeToXML(pugi::xml_document& doc) const override;
 

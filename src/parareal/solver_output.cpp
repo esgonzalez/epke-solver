@@ -15,8 +15,8 @@ epke::EPKEOutput::EPKEOutput(const pugi::xml_node& precomp_node) :
   _power(util::loadVectorData(precomp_node.child("power"))),
   _rho(util::loadVectorData(precomp_node.child("rho"))) {}
 
-const epke::EPKEOutput
-epke::EPKEOutput::createPrecomputed(const timeIndex n) const {
+para::SolverOutput::ptr
+epke::EPKEOutput::createPrecomputedImpl(const timeIndex n) const {
   const timeBins time(_time.begin(), _time.begin() + n + 1);
   const timeBins power(_power.begin(), _power.begin() + n + 1);
   const timeBins rho(_rho.begin(), _rho.begin() + n + 1);
@@ -27,7 +27,7 @@ epke::EPKEOutput::createPrecomputed(const timeIndex n) const {
     concentrations.push_back(concentration);
   }
 
-  return EPKEOutput(time, concentrations, power, rho);
+  return std::make_shared<EPKEOutput>(time, concentrations, power, rho);
 }
 
 void epke::EPKEOutput::writeToXML(pugi::xml_document& doc) const {
