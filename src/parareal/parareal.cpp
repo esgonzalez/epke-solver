@@ -52,8 +52,7 @@ void para::Parareal::solve() {
 }
 
 
-void para::Parareal::writeToXML() const {
-  pugi::xml_document doc;
+void para::Parareal::writeToXML(pugi::xml_document& doc) const {
   std::ofstream out(_outpath);
   _global_output->writeToXML(doc);
   doc.save(out);

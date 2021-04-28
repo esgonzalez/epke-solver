@@ -3,10 +3,12 @@
 
 #include "../catch.hpp"
 #include "epke/epke_solver.hpp"
+#include "parareal/parareal.hpp"
 #include "parareal/solver_parameters.hpp"
 #include "pugi/pugixml.hpp"
 #include "utility/load_data.hpp"
 
+// TODO: Move regression tests to the test_parareal.cpp file
 TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
   SECTION("Control rod ejection with feedback", "[buildXMLDoc]") {
     std::string ifile = "test/epke/regression/cr_ejection_feedback_in.xml";
@@ -28,22 +30,22 @@ TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
 
     pugi::xml_node parareal_node = idoc.child("parareal");
 
-    EPKEParameters params(parareal_node.child("epke_input"));
-    epke::EPKEOutput precomp(parareal_node.child("epke_output"));
-    auto n_steps = params.getNumTimeSteps();
+    para::Parareal parareal(parareal_node);
+
+    auto n_steps =
+      parareal_node.child("epke_input").attribute("n_steps").as_int();
 
     // Load the output power from the regression test
     para::timeBins opower =
       util::loadVectorData(odoc.child("epke_output").child("power"), n_steps);
 
-    // Create and run the EPKE solver
-    epke::Solver solver(params, precomp);
-    const auto output = solver.solve();
+    // Run the parareal solver
+    parareal.solve();
 
     pugi::xml_document tdoc;
 
     // Build the test output xml document
-    solver.buildXMLDoc(tdoc);
+    parareal.writeToXML(tdoc);
 
     para::timeBins tpower =
       util::loadVectorData(tdoc.child("epke_output").child("power"), n_steps);

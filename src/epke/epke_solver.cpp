@@ -75,7 +75,9 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
       fine_params.getNumTimeSteps() - fine_precomp.getNumTimeSteps();
   }
 
-  timeBins global_power(global_size), global_rho(global_size);
+  timeBins global_time(global_size);
+  timeBins global_power(global_size);
+  timeBins global_rho(global_size);
   precBins<timeBins> global_concentrations(params.getNumPrecursors(),
 					   timeBins(global_size));
 
@@ -89,20 +91,23 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
     precBins<timeBins>& fine_concentrations = fine_solver->concentrations;
 
     for (timeIndex n_fine = n; n_fine < fine_power.size(); n_fine++) {
+      global_time[n_global]  = fine_params.getTime(n_fine);
       global_power[n_global] =
 	fine_params.getPowNorm(n_fine) * fine_power.at(n_fine);
       global_rho[n_global]   = fine_rho.at(n_fine);
 
       for (precIndex k = 0; k < params.getNumPrecursors(); k++) {
-	global_concentrations[k][n] = fine_concentrations.at(k).at(n_fine);
+	global_concentrations[k][n_global] =
+	  fine_concentrations.at(k).at(n_fine);
       }
       n_global++;
     }
   }
 
-  EPKEOutput global_output(global_power, global_rho, global_concentrations);
-
-  return std::make_shared<EPKEOutput>(global_output);
+  return std::make_shared<EPKEOutput>(global_time,
+				      global_concentrations,
+				      global_power,
+				      global_rho);
 }
 
 const double Solver::computeDT(const timeIndex n) const {
@@ -202,6 +207,7 @@ const double Solver::computePower(const timeIndex n, const double alpha) const {
     s_d_prev += params.getDecayConstant(k,n-1) * concentrations.at(k).at(n-1);
   }
 
+  // compute the quadratic formula coefficients
   double a = params.getTheta() * dt * computeA1(n) / params.getGenTime(n);
   double b = params.getTheta() * dt * (((computeB1(n) - params.getBetaEff(n))
 					/ params.getGenTime(n) - alpha) +
@@ -214,6 +220,7 @@ const double Solver::computePower(const timeIndex n, const double alpha) const {
 			params.getGenTime(0)) +
 		       power.at(n - 1));
 
+  // TODO: Add a quadratic formula util method to take care of this
   if (a < 0) {
     return (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
   } else if (a == 0) {
@@ -264,44 +271,8 @@ para::SolverOutput::ptr Solver::solve() {
     rho[n] = computeA1(n) * power.at(n) + computeB1(n);
   }
 
-  return std::make_shared<EPKEOutput>(power, rho, concentrations);
-}
-
-void Solver::buildXMLDoc(pugi::xml_document& doc) const {
-  pugi::xml_node output_node = doc.append_child("epke_output");
-  pugi::xml_node time_node = output_node.append_child("time");
-  pugi::xml_node power_node = output_node.append_child("power");
-  pugi::xml_node rho_node = output_node.append_child("rho");
-  pugi::xml_node concs_node = output_node.append_child("concentrations");
-  std::ostringstream time_str, power_str, rho_str, conc_str;
-
-  for (int n = 0; n < params.getNumTimeSteps(); n++) {
-    time_str << std::setprecision(6) << params.getTime(n);
-    power_str << std::setprecision(12) << params.getPowNorm(n) * power.at(n);
-    rho_str << std::setprecision(12) << rho.at(n);
-    if (n != params.getNumTimeSteps() - 1) {
-      time_str << " ";
-      power_str << " ";
-      rho_str << " ";
-    }
-  }
-
-  time_node.text() = time_str.str().c_str();
-  power_node.text() = power_str.str().c_str();
-  rho_node.text() = rho_str.str().c_str();
-
-  for (int k = 0; k < params.getNumPrecursors(); k++) {
-    conc_str.str("");
-    conc_str.clear();
-    pugi::xml_node conc_node = concs_node.append_child("concentration");
-    conc_node.append_attribute("k") = k;
-    for (int n = 0; n < params.getNumTimeSteps(); n++) {
-      conc_str << std::setprecision(12) << concentrations.at(k).at(n);
-
-      if (n != params.getNumTimeSteps() - 1) {
-        conc_str << " ";
-      }
-    }
-    conc_node.text() = conc_str.str().c_str();
-  }
+  return std::make_shared<EPKEOutput>(params.getTime(),
+				      concentrations,
+				      power,
+				      rho);
 }

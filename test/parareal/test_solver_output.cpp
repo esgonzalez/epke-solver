@@ -7,11 +7,12 @@ TEST_CASE("Test solver_output functions.", "[SolverOutput]") {
     using namespace para;
 
     // output data
+    timeBins time  = {0.0, 1.0, 2.0, 3.0, 4.0};
     timeBins power = {1.0, 2.0, 3.0, 2.5, 2.0};
     timeBins rho   = {0.0, 1.0, 2.0, 1.0, 0.0};
     precBins<timeBins> concentrations = {{0.5, 1.0, 1.5, 2.0, 2.5}};
 
-    epke::EPKEOutput output(power, rho, concentrations);
+    epke::EPKEOutput output(time, concentrations, power, rho);
 
     timeBins fine_p_history = {1.0, 2.0, 3.0};
     timeBins fine_rho_history = {0.0, 1.0, 2.0};

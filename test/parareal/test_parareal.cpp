@@ -17,11 +17,12 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
   double theta, gamma_d, eta;
 
   // EPKE precomputed values
+  timeBins precomp_time;
   timeBins power;
   timeBins rho;
   precBins<timeBins> concentrations;
 
-  epke::EPKEOutput precomputed(power, rho, concentrations);
+  epke::EPKEOutput precomputed(precomp_time, concentrations, power, rho);
 
   // additional parareal parameters
   precIndex max_iterations;

@@ -81,8 +81,6 @@ public:
   const timeIndex getNumPrecompTimeSteps() const {
     return precomp.getNumTimeSteps();
   }
-
-  void buildXMLDoc(pugi::xml_document& doc) const;
 };
 } // namespace epke
 

@@ -1,7 +1,8 @@
 <?xml version="1.0" ?>
 <parareal outpath="examples/epke_output.xml" max_iterations="2" n_fine_per_coarse="2">
-   <epke_output>
-      <power>1e-06</power>
+   <epke_output n_steps="1">
+     <time>0.0</time>
+     <power>1e-06</power>
       <rho>0.0</rho>
       <concentrations>
          <concentration k="0">2.0187499999999995e-08</concentration>

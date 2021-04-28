@@ -24,6 +24,7 @@ protected:
   const timeBins _time;                       // time points
   const precBins<Precursor::ptr> _precursors; // pointers to precursor objects
   const bool _interpolated; // indicates params have already been interpolated
+
 private:
   static const precBins<Precursor::ptr>
   buildPrecursors(const pugi::xml_node& precursors_node,
