@@ -37,7 +37,11 @@ public:
     return _concentrations.at(k).at(n);
   }
 
+  // Create output object with truncated precomputed values from coarse solver
   virtual SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const = 0;
+
+  // Create output object with only information from the coarse time steps
+  virtual SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const = 0;
 
   virtual void writeToXML(pugi::xml_document& doc) const = 0;
 };
@@ -46,6 +50,12 @@ public:
   std::shared_ptr<T> createPrecomputed(std::shared_ptr<T> precomp,
 				       const timeIndex n) {
     return std::static_pointer_cast<T>(precomp->createPrecomputedImpl(n));
+  }
+
+  template<typename T>
+  std::shared_ptr<T> coarsen(std::shared_ptr<T> fine_output,
+			     const timeBins& coarse_time) {
+    return std::static_pointer_cast<T>(fine_output->coarsenImpl(coarse_time));
   }
 
 } // namespace para
@@ -75,6 +85,11 @@ public:
   const double getRho(const timeIndex n)   const { return _rho.at(n);   }
 
   SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const override;
+
+  // TODO: Implement this function
+  SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const override {
+    /* Placeholder */
+  }
 
   void writeToXML(pugi::xml_document& doc) const override;
 
