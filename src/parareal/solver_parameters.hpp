@@ -61,12 +61,25 @@ public:
     return _precursors.at(k)->decayConstant(n);
   }
 
+  virtual SolverParameters::ptr
+  interpolate_impl(const timeBins& fine_time) const = 0;
+
 };
+
+  template<typename T>
+  std::shared_ptr<T> interpolate(std::shared_ptr<T> params,
+				 const timeBins& fine_time) {
+    return std::static_pointer_cast<T>(params->interpolate_impl(fine_time));
+  }
+
 } // namespace para
 
 // TODO: Break up this class into its own hpp and cpp files and move to epke
 //       directory
 class EPKEParameters : public para::SolverParameters {
+public:
+  using ptr = std::shared_ptr<EPKEParameters>;
+
 private:
   // time-dependent parameters
   const timeBins _rho_imp;  // imposed reactivity (without feedback)
@@ -123,7 +136,8 @@ public:
   const double getLambdaH(const timeIndex n) const { return _lambda_h.at(n);  }
 
   // Interpolate parameters for the fine time mesh
-  const EPKEParameters interpolate(const timeBins& fine_time) const;
+  virtual SolverParameters::ptr
+  interpolate_impl(const timeBins& fine_time) const override;
 
 };
 

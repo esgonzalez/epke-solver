@@ -33,77 +33,77 @@ TEST_CASE("Test solver_parameters functions.", "[SolverParameters]") {
   timeBins fine_lambda_h   = {2.0, 2.0, 2.0, 2.0, 2.0};
 
   SECTION("Interpolate epke solver parameters", "[interpolate]") {
-    EPKEParameters parameters(time,
-			      precursors,
-			      rho_imp,
-			      gen_time,
-			      pow_norm,
-			      beta_eff,
-			      lambda_h,
-			      theta,
-			      gamma_d,
-			      eta);
+    auto parameters = std::make_shared<EPKEParameters>(time,
+						       precursors,
+						       rho_imp,
+						       gen_time,
+						       pow_norm,
+						       beta_eff,
+						       lambda_h,
+						       theta,
+						       gamma_d,
+						       eta);
 
-    auto fine_params = parameters.interpolate(fine_time);
+    auto fine_params = para::interpolate(parameters, fine_time);
 
     // Check to make sure we interpolated all of the parameters correctly
-    for (timeIndex n = 0; n < fine_params.getNumTimeSteps(); n++) {
-      REQUIRE(fine_params.getTime(n)    == fine_time.at(n));
-      REQUIRE(fine_params.getRhoImp(n)  == fine_rho_imp.at(n));
-      REQUIRE(fine_params.getGenTime(n) == fine_gen_time.at(n));
-      REQUIRE(fine_params.getPowNorm(n) == fine_pow_norm.at(n));
-      REQUIRE(fine_params.getBetaEff(n) == fine_beta_eff.at(n));
-      REQUIRE(fine_params.getLambdaH(n) == fine_lambda_h.at(n));
+    for (timeIndex n = 0; n < fine_params->getNumTimeSteps(); n++) {
+      REQUIRE(fine_params->getTime(n)    == fine_time.at(n));
+      REQUIRE(fine_params->getRhoImp(n)  == fine_rho_imp.at(n));
+      REQUIRE(fine_params->getGenTime(n) == fine_gen_time.at(n));
+      REQUIRE(fine_params->getPowNorm(n) == fine_pow_norm.at(n));
+      REQUIRE(fine_params->getBetaEff(n) == fine_beta_eff.at(n));
+      REQUIRE(fine_params->getLambdaH(n) == fine_lambda_h.at(n));
 
-      for (precIndex k = 0; k < fine_params.getNumPrecursors(); k++) {
-	REQUIRE(fine_params.getDecayConstant(k,n) ==
+      for (precIndex k = 0; k < fine_params->getNumPrecursors(); k++) {
+	REQUIRE(fine_params->getDecayConstant(k,n) ==
 		fine_precursors.at(k)->decayConstant(n));
-	REQUIRE(fine_params.getDelayedFraction(k,n) ==
+	REQUIRE(fine_params->getDelayedFraction(k,n) ==
 		fine_precursors.at(k)->delayedFraction(n));
       }
     }
 
     // Check the solver parameters that aren't dependent on time
-    REQUIRE(fine_params.getTheta()  == theta);
-    REQUIRE(fine_params.getGammaD() == gamma_d);
-    REQUIRE(fine_params.getEta()    == eta);
+    REQUIRE(fine_params->getTheta()  == theta);
+    REQUIRE(fine_params->getGammaD() == gamma_d);
+    REQUIRE(fine_params->getEta()    == eta);
   }
 
   SECTION("Parameters have already been interpolated", "[interpolate]") {
-    EPKEParameters parameters(time,
-			      precursors,
-			      rho_imp,
-			      gen_time,
-			      pow_norm,
-			      beta_eff,
-			      lambda_h,
-			      theta,
-			      gamma_d,
-			      eta,
-			      true);
+    auto parameters = std::make_shared<EPKEParameters>(time,
+						       precursors,
+						       rho_imp,
+						       gen_time,
+						       pow_norm,
+						       beta_eff,
+						       lambda_h,
+						       theta,
+						       gamma_d,
+						       eta,
+						       true);
 
-    auto fine_params = parameters.interpolate(fine_time);
+    auto fine_params = para::interpolate(parameters, fine_time);
 
     // Check to make sure that we didn't create a new parameters object
-    for (timeIndex n = 0; n < fine_params.getNumTimeSteps(); n++) {
-      REQUIRE(fine_params.getTime(n)    == time.at(n));
-      REQUIRE(fine_params.getRhoImp(n)  == rho_imp.at(n));
-      REQUIRE(fine_params.getGenTime(n) == gen_time.at(n));
-      REQUIRE(fine_params.getPowNorm(n) == pow_norm.at(n));
-      REQUIRE(fine_params.getBetaEff(n) == beta_eff.at(n));
-      REQUIRE(fine_params.getLambdaH(n) == lambda_h.at(n));
+    for (timeIndex n = 0; n < fine_params->getNumTimeSteps(); n++) {
+      REQUIRE(fine_params->getTime(n)    == time.at(n));
+      REQUIRE(fine_params->getRhoImp(n)  == rho_imp.at(n));
+      REQUIRE(fine_params->getGenTime(n) == gen_time.at(n));
+      REQUIRE(fine_params->getPowNorm(n) == pow_norm.at(n));
+      REQUIRE(fine_params->getBetaEff(n) == beta_eff.at(n));
+      REQUIRE(fine_params->getLambdaH(n) == lambda_h.at(n));
 
-      for (precIndex k = 0; k < fine_params.getNumPrecursors(); k++) {
-	REQUIRE(fine_params.getDecayConstant(k,n) ==
+      for (precIndex k = 0; k < fine_params->getNumPrecursors(); k++) {
+	REQUIRE(fine_params->getDecayConstant(k,n) ==
 		precursors.at(k)->decayConstant(n));
-	REQUIRE(fine_params.getDelayedFraction(k,n) ==
+	REQUIRE(fine_params->getDelayedFraction(k,n) ==
 		precursors.at(k)->delayedFraction(n));
       }
     }
 
     // Check the solver parameters that aren't dependent on time
-    REQUIRE(fine_params.getTheta()  == theta);
-    REQUIRE(fine_params.getGammaD() == gamma_d);
-    REQUIRE(fine_params.getEta()    == eta);
+    REQUIRE(fine_params->getTheta()  == theta);
+    REQUIRE(fine_params->getGammaD() == gamma_d);
+    REQUIRE(fine_params->getEta()    == eta);
   }
 }

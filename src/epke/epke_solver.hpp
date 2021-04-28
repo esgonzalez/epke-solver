@@ -22,7 +22,7 @@ public:
 
 private:
   // input member variables
-  const EPKEParameters params;
+  const EPKEParameters::ptr params;
 
   // precomputed values of power, rho, and concentrations (so the simulation
   // can start at t > 0)
@@ -58,7 +58,7 @@ public:
   Solver(const pugi::xml_node& input_node, const pugi::xml_node& output_node);
 
   // Construct from parameters and precomputed objects
-  Solver(const EPKEParameters& parameters, const EPKEOutput& precomputed);
+  Solver(const EPKEParameters::ptr parameters, const EPKEOutput& precomputed);
 
   // Construct a fine solver by interpolating parameters from coarse solver
   Solver::ptr createFineSolver(const timeBins& fine_time,
@@ -70,8 +70,8 @@ public:
   // TODO: Make this a virtual function from the Solver base class
   para::SolverOutput::ptr solve();
 
-  para::SolverParameters::ptr getParameters() const {
-    return std::make_shared<EPKEParameters>(params);
+  EPKEParameters::ptr getParameters() const {
+    return params;
   }
 
   para::SolverOutput::ptr getPrecomputed() const {

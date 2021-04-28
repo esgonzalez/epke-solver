@@ -26,35 +26,38 @@ EPKEParameters::EPKEParameters(const pugi::xml_node& input_node) :
   _gamma_d(input_node.attribute("gamma_d").as_double()),
   _eta(input_node.attribute("eta").as_double()) {}
 
-const EPKEParameters
-EPKEParameters::interpolate(const timeBins& fine_time) const {
+para::SolverParameters::ptr
+EPKEParameters::interpolate_impl(const timeBins& fine_time) const {
+  using util::interpolate;
+
   // interpolate the precursors
   precBins<Precursor::ptr> fine_precursors;
 
   if (_interpolated) {
-    return *this;
+    return std::make_shared<EPKEParameters>(*this);
   }
 
   for (const auto p : _precursors) {
     Precursor::ptr fine_precursor
-      = std::make_shared<Precursor>(util::interpolate(_time,
-						      p->decayConstant(),
-						      fine_time),
-				    util::interpolate(_time,
-						      p->delayedFraction(),
-						      fine_time));
+      = std::make_shared<Precursor>(interpolate(_time,
+						p->decayConstant(),
+						fine_time),
+				    interpolate(_time,
+						p->delayedFraction(),
+						fine_time));
     fine_precursors.push_back(fine_precursor);
   }
 
-  return EPKEParameters(fine_time,
-			fine_precursors,
-			util::interpolate(_time, _rho_imp,  fine_time),
-			util::interpolate(_time, _gen_time, fine_time),
-			util::interpolate(_time, _pow_norm, fine_time),
-			util::interpolate(_time, _beta_eff, fine_time),
-			util::interpolate(_time, _lambda_h, fine_time),
-			_theta,
-			_gamma_d,
-			_eta,
-			true);
+  return
+    std::make_shared<EPKEParameters>(fine_time,
+				     fine_precursors,
+				     interpolate(_time, _rho_imp,  fine_time),
+				     interpolate(_time, _gen_time, fine_time),
+				     interpolate(_time, _pow_norm, fine_time),
+				     interpolate(_time, _beta_eff, fine_time),
+				     interpolate(_time, _lambda_h, fine_time),
+				     _theta,
+				     _gamma_d,
+				     _eta,
+				     true);
 }

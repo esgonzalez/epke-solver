@@ -29,16 +29,17 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
   std::string outpath;
 
   SECTION("Generate a fine time mesh for a given index", "[generateFineTime]") {
-    EPKEParameters parameters(time,
-			      precursors,
-			      rho_imp,
-			      gen_time,
-			      pow_norm,
-			      beta_eff,
-			      lambda_h,
-			      theta,
-			      gamma_d,
-			      eta);
+    EPKEParameters::ptr parameters =
+      std::make_shared<EPKEParameters>(time,
+				       precursors,
+				       rho_imp,
+				       gen_time,
+				       pow_norm,
+				       beta_eff,
+				       lambda_h,
+				       theta,
+				       gamma_d,
+				       eta);
 
     // build EPKE solver
     epke::Solver solver(parameters, precomputed);
@@ -63,17 +64,18 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
 
   SECTION("Generate fine time with pre-interpolated parameters",
 	  "[generateFineTime]") {
-    EPKEParameters parameters(time,
-			      precursors,
-			      rho_imp,
-			      gen_time,
-			      pow_norm,
-			      beta_eff,
-			      lambda_h,
-			      theta,
-			      gamma_d,
-			      eta,
-			      true);
+    EPKEParameters::ptr parameters =
+      std::make_shared<EPKEParameters>(time,
+				       precursors,
+				       rho_imp,
+				       gen_time,
+				       pow_norm,
+				       beta_eff,
+				       lambda_h,
+				       theta,
+				       gamma_d,
+				       eta,
+				       true);
 
     // build EPKE solver
     epke::Solver solver(parameters, precomputed);
