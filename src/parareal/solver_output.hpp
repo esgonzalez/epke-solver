@@ -30,6 +30,7 @@ public:
 	       const precBins<timeBins>& concentrations)
     : _time(time), _concentrations(concentrations) {}
 
+  // Getters
   const timeIndex getNumTimeSteps()  const { return _time.size(); }
   const precIndex getNumPrecursors() const { return _concentrations.size(); }
 
@@ -43,6 +44,7 @@ public:
   // Create output object with only information from the coarse time steps
   virtual SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const = 0;
 
+  // Write the output to an xml document
   virtual void writeToXML(pugi::xml_document& doc) const = 0;
 };
 
@@ -61,6 +63,7 @@ public:
 } // namespace para
 
 namespace epke {
+
 class EPKEOutput : public para::SolverOutput {
 public:
   using ptr = std::shared_ptr<EPKEOutput>;
@@ -86,14 +89,12 @@ public:
 
   SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const override;
 
-  // TODO: Implement this function
-  SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const override {
-    /* Placeholder */
-  }
+  SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const override;
 
   void writeToXML(pugi::xml_document& doc) const override;
 
 };
+
 } // namespace epke
 
 #endif

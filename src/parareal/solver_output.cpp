@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <iterator>
 #include <iomanip>
 
 #include "solver_output.hpp"
@@ -28,6 +30,32 @@ epke::EPKEOutput::createPrecomputedImpl(const timeIndex n) const {
   }
 
   return std::make_shared<EPKEOutput>(time, concentrations, power, rho);
+}
+
+para::SolverOutput::ptr
+epke::EPKEOutput::coarsenImpl(const timeBins& coarse_time) const {
+  timeBins coarse_power(coarse_time.size());
+  timeBins coarse_rho(coarse_time.size());
+  precBins<timeBins> coarse_concentrations(getNumPrecursors(),
+					   timeBins(coarse_time.size()));
+
+  for (timeIndex n_coarse = 0; n_coarse < coarse_time.size(); n_coarse++) {
+    auto it = std::find(_time.cbegin(), _time.cend(), coarse_time.at(n_coarse));
+
+    timeIndex n_fine = std::distance(_time.cbegin(), it);
+
+    coarse_power[n_coarse] = _power.at(n_fine);
+    coarse_rho[n_coarse] = _rho.at(n_fine);
+
+    for (precIndex k = 0; k < getNumPrecursors(); k++) {
+      coarse_concentrations[k][n_coarse] = _concentrations.at(k).at(n_fine);
+    }
+  }
+
+  return std::make_shared<EPKEOutput>(coarse_time,
+				      coarse_concentrations,
+				      coarse_power,
+				      coarse_rho);
 }
 
 void epke::EPKEOutput::writeToXML(pugi::xml_document& doc) const {
