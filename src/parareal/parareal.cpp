@@ -54,6 +54,20 @@ void para::Parareal::solve() {
 
 void para::Parareal::writeToXML(pugi::xml_document& doc) const {
   std::ofstream out(_outpath);
-  _global_output->writeToXML(doc);
+
+  // create the root level node
+  doc.append_child("parareal");
+
+  auto params = _solver.getParameters();
+
+  if (params->getInterpolated()) {
+    _global_output->writeToXML(doc);
+    params->writeToXML(doc);
+  }
+  else {
+    auto global_coarsened = coarsen(_global_output, params->getTime());
+    global_coarsened->writeToXML(doc);
+  }
+
   doc.save(out);
 }

@@ -64,6 +64,7 @@ public:
   virtual SolverParameters::ptr
   interpolateImpl(const timeBins& fine_time) const = 0;
 
+  virtual void writeToXML(pugi::xml_document& doc) const = 0;
 };
 
   template<typename T>
@@ -78,7 +79,8 @@ public:
 //       directory
 class EPKEParameters : public para::SolverParameters {
 public:
-  using ptr = std::shared_ptr<EPKEParameters>;
+  using Base = SolverParameters;
+  using ptr  = std::shared_ptr<EPKEParameters>;
 
 private:
   // time-dependent parameters
@@ -136,9 +138,9 @@ public:
   const double getLambdaH(const timeIndex n) const { return _lambda_h.at(n);  }
 
   // Interpolate parameters for the fine time mesh
-  virtual SolverParameters::ptr
-  interpolateImpl(const timeBins& fine_time) const override;
+  virtual Base::ptr interpolateImpl(const timeBins& fine_time) const override;
 
+  void writeToXML(pugi::xml_document& doc) const override;
 };
 
 #endif

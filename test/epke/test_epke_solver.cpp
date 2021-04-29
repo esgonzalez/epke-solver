@@ -36,8 +36,9 @@ TEST_CASE("Regression tests for the EPKE solver.", "[EPKESolver]") {
       parareal_node.child("epke_input").attribute("n_steps").as_int();
 
     // Load the output power from the regression test
+    auto output_node = odoc.child("parareal").child("epke_output");
     para::timeBins opower =
-      util::loadVectorData(odoc.child("epke_output").child("power"), n_steps);
+      util::loadVectorData(output_node.child("power"), n_steps);
 
     // Run the parareal solver
     parareal.solve();
