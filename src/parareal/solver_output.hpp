@@ -78,10 +78,10 @@ public:
   EPKEOutput(const pugi::xml_node& precomp_node);
 
   // Construct from data vectors
-  EPKEOutput(const timeBins&           time,
-	     const precBins<timeBins>& concentrations,
-	     const timeBins&           power,
-	     const timeBins&           rho)
+  EPKEOutput(const timeBins           time,
+	     const precBins<timeBins> concentrations,
+	     const timeBins           power,
+	     const timeBins           rho)
     : SolverOutput(time, concentrations), _power(power), _rho(rho) {}
 
   const double getPower(const timeIndex n) const { return _power.at(n); }

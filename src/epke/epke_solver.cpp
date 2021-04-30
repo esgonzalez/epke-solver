@@ -68,7 +68,7 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
   timeIndex global_size = 1;
 
   timeIndex coarse_size =
-    params->getInterpolated() ? 1 : params->getNumTimeSteps();
+    params->getInterpolated() ? 1 : params->getNumTimeSteps() - 1;
 
   for (timeIndex n = 0; n < coarse_size; n++) {
     const auto fine_params = _fine_solvers.at(n)->params;
@@ -83,7 +83,16 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
   precBins<timeBins> global_concentrations(params->getNumPrecursors(),
 					   timeBins(global_size));
 
-  timeIndex n_global = 0;
+  // fill in the first time step values
+  global_time[0]  = params->getTime(0);
+  global_power[0] = params->getPowNorm(0) * power.at(0);
+  global_rho[0] = rho.at(0);
+
+  for (precIndex k = 0; k < params->getNumPrecursors(); k++) {
+    global_concentrations[k][0] = concentrations[k][0];
+  }
+
+  timeIndex n_global = 1;
 
   for (timeIndex n = 0; n < coarse_size; n++) {
     const auto          fine_solver         = _fine_solvers.at(n);
@@ -92,7 +101,7 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
     timeBins&           fine_rho            = fine_solver->rho;
     precBins<timeBins>& fine_concentrations = fine_solver->concentrations;
 
-    for (timeIndex n_fine = n; n_fine < fine_power.size(); n_fine++) {
+    for (timeIndex n_fine = n + 1; n_fine < fine_power.size(); n_fine++) {
       global_time[n_global]  = fine_params->getTime(n_fine);
       global_power[n_global] =
 	fine_params->getPowNorm(n_fine) * fine_power.at(n_fine);

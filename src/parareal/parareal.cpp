@@ -1,6 +1,5 @@
 #include <vector>
 #include <cassert>
-#include <iostream> // TEMP
 
 #include "parareal/parareal.hpp"
 
@@ -40,8 +39,13 @@ para::timeBins para::Parareal::generateFineTime(para::timeIndex const n) {
 }
 
 void para::Parareal::solve() {
-  // loop over each index of the preocmputed values
-  for (timeIndex n = 0; n < _solver.getNumPrecompTimeSteps(); n++) {
+  auto params = _solver.getParameters();
+
+  timeIndex coarse_size =
+    params->getInterpolated() ? 1 : params->getNumTimeSteps() - 1;
+
+  // loop over each index of the precomputed values
+  for (timeIndex n = 0; n < coarse_size; n++) {
     const auto fine_time   = generateFineTime(n);
     const auto fine_solver = _solver.createFineSolver(fine_time, n);
     const auto fine_output = fine_solver->solve();
@@ -67,7 +71,7 @@ void para::Parareal::writeToXML(pugi::xml_document& doc) const {
   else {
     auto global_coarsened = coarsen(_global_output, params->getTime());
     global_coarsened->writeToXML(doc);
-  }
+ }
 
   doc.save(out);
 }
