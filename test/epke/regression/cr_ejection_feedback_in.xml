@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<parareal outpath="examples/epke_output.xml" max_iterations="2" n_fine_per_coarse="2">
+<parareal outpath="examples/epke_output.xml" max_iterations="1" n_fine_per_coarse="1">
    <epke_output n_steps="1">
      <time>0.0</time>
      <power>1e-06</power>

@@ -1,6 +1,9 @@
 #include <vector>
 #include <cassert>
 
+// TEMP
+#include <iostream>
+
 #include "parareal/parareal.hpp"
 
 #include "utility/interpolate.hpp"
@@ -44,15 +47,23 @@ void para::Parareal::solve() {
   timeIndex coarse_size =
     params->getInterpolated() ? 1 : params->getNumTimeSteps() - 1;
 
-  // loop over each index of the precomputed values
-  for (timeIndex n = 0; n < coarse_size; n++) {
-    const auto fine_time   = generateFineTime(n);
-    const auto fine_solver = _solver.createFineSolver(fine_time, n);
-    const auto fine_output = fine_solver->solve();
+  // TODO: create typedef for parareal iteration index
+  for (int k = 0; k < _max_iterations; k++) {
+    _global_output = _solver.updateCoarseSolution();
+
+    // loop over each index of the precomputed values (in parallel)
+    for (timeIndex n = 0; n < coarse_size; n++) {
+      // TODO: Only generate fine solvers once durring k=0
+      const auto fine_time   = generateFineTime(n);
+      const auto fine_solver = _solver.createFineSolver(fine_time, n);
+      const auto fine_output = fine_solver->solve();
+    }
   }
 
-  // have the coarse solver assemble the global output
-  _global_output = _solver.assembleGlobalOutput();
+  if (params->getInterpolated()) {
+    // have the coarse solver assemble the global output
+    _global_output = _solver.assembleGlobalOutput();
+  }
 }
 
 
@@ -62,16 +73,8 @@ void para::Parareal::writeToXML(pugi::xml_document& doc) const {
   // create the root level node
   doc.append_child("parareal");
 
-  auto params = _solver.getParameters();
-
-  if (params->getInterpolated()) {
-    _global_output->writeToXML(doc);
-    params->writeToXML(doc);
-  }
-  else {
-    auto global_coarsened = coarsen(_global_output, params->getTime());
-    global_coarsened->writeToXML(doc);
- }
+  _global_output->writeToXML(doc);
+  _solver.getParameters()->writeToXML(doc);
 
   doc.save(out);
 }

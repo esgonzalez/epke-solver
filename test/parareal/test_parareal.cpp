@@ -45,7 +45,7 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
 				       eta);
 
     // build EPKE solver
-    epke::Solver solver(parameters, precomputed);
+    epke::Propagator solver(parameters, precomputed);
 
     timeIndex n_fine_per_coarse = 2;
 
@@ -81,7 +81,7 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
 				       true);
 
     // build EPKE solver
-    epke::Solver solver(parameters, precomputed);
+    epke::Propagator solver(parameters, precomputed);
 
     timeIndex n_fine_per_coarse = 2;
 

@@ -21,7 +21,7 @@ public:
 
 private:
   // Fine time grid (low fidelity) solver
-  epke::Solver _solver;
+  epke::Propagator _solver;
 
   // Output path
   std::string _outpath;
@@ -38,7 +38,7 @@ private:
 public:
   Parareal(const pugi::xml_node& parareal_node);
 
-  Parareal(const epke::Solver&     solver,
+  Parareal(const epke::Propagator&     solver,
 	   const std::string       outpath,
 	   const precIndex         max_iterations,
 	   const timeIndex         n_fine_per_coarse)

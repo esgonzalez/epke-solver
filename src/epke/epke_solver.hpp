@@ -20,13 +20,13 @@ public:
   using ptr         = std::shared_ptr<Solver>;
   using FineSolvers = std::vector<Solver::ptr>;
 
-private:
+protected:
   // input member variables
-  const EPKEParameters::ptr params;
+  EPKEParameters::ptr params;
 
   // precomputed values of power, rho, and concentrations (so the simulation
   // can start at t > 0)
-  const EPKEOutput::ptr precomp;
+  EPKEOutput::ptr precomp;
 
   // vector of pointers to fine solvers created by this coarse solver
   FineSolvers _fine_solvers;
@@ -53,6 +53,17 @@ private:
 
   const bool acceptTransformation(const timeIndex n, const double alpha) const;
 
+  virtual const double getPower(const timeIndex n) const { return power.at(n); }
+
+  virtual const double getConcentration(const precIndex k,
+					const timeIndex n) const {
+    return concentrations.at(k).at(n);
+  }
+
+  virtual const timeIndex getFirstTimeIndex() const {
+    return precomp->getNumTimeSteps();
+  }
+
 public:
   // Construct from pugixml nodes
   Solver(const pugi::xml_node& input_node, const pugi::xml_node& output_node);
@@ -65,11 +76,14 @@ public:
   Solver::ptr createFineSolver(const timeBins& fine_time,
 			       const timeIndex coarse_index);
 
+
+  para::SolverOutput::ptr updateCoarseSolution();
+
   // Assemble global output from vector of fine solver output
-  const para::SolverOutput::ptr assembleGlobalOutput() const;
+  const EPKEOutput::ptr assembleGlobalOutput() const;
 
   // TODO: Make this a virtual function from the Solver base class
-  para::SolverOutput::ptr solve();
+  EPKEOutput::ptr solve();
 
   EPKEParameters::ptr getParameters() const {
     return params;
@@ -79,10 +93,42 @@ public:
     return precomp;
   }
 
+  EPKEOutput::ptr getOutput() const {
+    return std::make_shared<EPKEOutput>(params->getTime(),
+					concentrations,
+					power,
+					rho);
+  }
+
   const timeIndex getNumPrecompTimeSteps() const {
     return precomp->getNumTimeSteps();
   }
 };
+
+class Propagator : public Solver {
+private:
+  const double getPower(const timeIndex n) const override {
+    return precomp->getPower(n);
+  }
+
+  const double getConcentration(const precIndex k,
+				const timeIndex n) const override {
+    return precomp->getConcentration(k,n);
+  }
+
+  const timeIndex getFirstTimeIndex() const override { return 1; }
+
+public:
+  Propagator(const pugi::xml_node& input_node,
+	     const pugi::xml_node& output_node) :
+    Solver(input_node, output_node) {}
+
+  Propagator(const EPKEParameters::ptr parameters,
+	     const EPKEOutput::ptr     precomputed) :
+    Solver(parameters, precomputed) {}
+
+};
+
 } // namespace epke
 
 #endif

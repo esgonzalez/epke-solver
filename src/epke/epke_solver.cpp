@@ -63,7 +63,27 @@ Solver::ptr Solver::createFineSolver(const timeBins& fine_time,
   return fine_solver;
 }
 
-const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
+para::SolverOutput::ptr Solver::updateCoarseSolution() {
+  auto old_coarse = getOutput();
+
+  // Fine solvers should be empty for the first parareal iteration
+  if (_fine_solvers.empty()) {
+    return old_coarse;
+  }
+
+  auto fine_global = assembleGlobalOutput();
+  auto fine_coarsened = para::coarsen(fine_global, params->getTime());
+
+  auto propagated_coarse = solve();
+
+  precomp = propagated_coarse + fine_coarsened - old_coarse;
+
+  if (!params->getInterpolated()) { _fine_solvers.clear(); }
+
+  return fine_global;
+}
+
+const EPKEOutput::ptr Solver::assembleGlobalOutput() const {
   // compute the global size
   timeIndex global_size = 1;
 
@@ -85,7 +105,7 @@ const para::SolverOutput::ptr Solver::assembleGlobalOutput() const {
 
   // fill in the first time step values
   global_time[0]  = params->getTime(0);
-  global_power[0] = params->getPowNorm(0) * power.at(0);
+  global_power[0] = params->getPowNorm(0) * getPower(0);
   global_rho[0] = rho.at(0);
 
   for (precIndex k = 0; k < params->getNumPrecursors(); k++) {
@@ -156,16 +176,16 @@ const double Solver::computeZetaHat(const precIndex k,
 
   if (n < 2) {
     beta_prev_prev = params->getDelayedFraction(k,n-1);
-    power_prev_prev = power.at(n-1);
+    power_prev_prev = getPower(n-1);
     gen_time_prev_prev = params->getGenTime(n-1);
   } else {
     beta_prev_prev = params->getDelayedFraction(k,n-2);
-    power_prev_prev = power.at(n-2);
+    power_prev_prev = getPower(n-2);
     gen_time_prev_prev = params->getGenTime(n-2);
   }
 
-  return w * concentrations.at(k).at(n - 1) +
-    w * params->getGenTime(0) * power.at(n - 1) *
+  return w * getConcentration(k, n-1) +
+    w * params->getGenTime(0) * getPower(n - 1) *
     params->getDelayedFraction(k,n-1) / params->getGenTime(n - 1) *
     (k0(lk, dt) - (k2(lk, dt) - dt * (gamma - 1) * k1(lk, dt)) /
      (gamma * dt * dt)) +
@@ -196,12 +216,12 @@ const double Solver::computeB1(const timeIndex n) const {
 
   // we have to set these values so we don't get an out of range vector
   const auto n_accum = n < 2 ? n - 1 : n - 2;
-  const auto H_prev_prev = params->getPowNorm(n_accum) * power.at(n_accum);
+  const auto H_prev_prev = params->getPowNorm(n_accum) * getPower(n_accum);
 
   return params->getRhoImp(n) + 1 / E(lh, dt) *
-    ((rho.at(n-1) - params->getRhoImp(n-1)) - power.at(0) * params->getGammaD()
+    ((rho.at(n-1) - params->getRhoImp(n-1)) - getPower(0) * params->getGammaD()
      * params->getEta() * k0(lh, dt)) + params->getGammaD() / E(lh, dt) *
-    (params->getPowNorm(n-1) * power.at(n - 1) *
+    (params->getPowNorm(n-1) * getPower(n - 1) *
      (k0(lh, dt) - (k2(lh, dt) + (gamma - 1) * dt * k1(lh, dt)) /
       (gamma * dt * dt)) + H_prev_prev * (k2(lh, dt) - k1(lh, dt) * dt) /
      ((1 + gamma) * gamma * dt * dt));
@@ -215,7 +235,7 @@ const double Solver::computePower(const timeIndex n, const double alpha) const {
   for (int k = 0; k < params->getNumPrecursors(); k++) {
     tau += params->getDecayConstant(k,n) * computeOmega(k, n);
     s_hat_d += params->getDecayConstant(k,n) * computeZetaHat(k, n);
-    s_d_prev += params->getDecayConstant(k,n-1) * concentrations.at(k).at(n-1);
+    s_d_prev += params->getDecayConstant(k,n-1) * getConcentration(k,n-1);
   }
 
   // compute the quadratic formula coefficients
@@ -227,9 +247,9 @@ const double Solver::computePower(const timeIndex n, const double alpha) const {
     exp(alpha * dt) * ((1 - params->getTheta()) * dt *
 		       (((rho.at(n - 1) - params->getBetaEff(n - 1)) /
 			 params->getGenTime(n - 1) -
-			 alpha) * power.at(n - 1) + s_d_prev /
+			 alpha) * getPower(n - 1) + s_d_prev /
 			params->getGenTime(0)) +
-		       power.at(n - 1));
+		       getPower(n - 1));
 
   // TODO: Add a quadratic formula util method to take care of this
   if (a < 0) {
@@ -245,41 +265,37 @@ const double Solver::computePower(const timeIndex n, const double alpha) const {
 const bool Solver::acceptTransformation(const timeIndex n,
 					const double alpha) const {
 
-  const double power_prev_prev = n < 2 ? power.at(n - 1) : power.at(n - 2);
+  const double power_prev_prev = n < 2 ? getPower(n - 1) : getPower(n - 2);
 
-  double lhs = fabs(power.at(n) - exp(alpha * computeDT(n)) * power.at(n - 1));
-  double rhs = fabs(power.at(n) - power.at(n - 1) -
-		    (power.at(n - 1) - power_prev_prev) / computeGamma(n));
+  double lhs = fabs(getPower(n) - exp(alpha * computeDT(n)) * getPower(n - 1));
+  double rhs = fabs(getPower(n) - getPower(n - 1) -
+		    (getPower(n - 1) - power_prev_prev) / computeGamma(n));
   return (lhs <= rhs);
 }
 
-para::SolverOutput::ptr Solver::solve() {
+EPKEOutput::ptr Solver::solve() {
   // set initial conditions for the power and reactivity vectors
-  double alpha = 0.0;
-
-  for (int n = precomp->getNumTimeSteps(); n < params->getNumTimeSteps(); n++) {
+  for (int n = getFirstTimeIndex(); n < params->getNumTimeSteps(); n++) {
     // compute the transformation parameter
-    if (n > 1) {
-      alpha = 1 / computeDT(n - 1) * log(power.at(n - 1) / power.at(n - 2));
-    }
+    double alpha = n > 1 ?
+      1 / computeDT(n - 1) * log(getPower(n - 1) / getPower(n - 2)) : 0.0;
 
     // evaluate the power at this time step
     power[n] = computePower(n, alpha);
 
     // test whether we accept or reject the transformation parameter
-    // if (!acceptTransformation(n, alpha, gamma)) {
-    // alpha = 0.0;
-    // power[n] = computeABC(n, alpha);
-    //}
+    if (!acceptTransformation(n, alpha)) {
+      power[n] = computePower(n, 0.0);
+    }
 
     // update the precursor concentrations
     for (int k = 0; k < params->getNumPrecursors(); k++) {
-      concentrations[k][n] = power.at(n) * computeOmega(k,n) +
+      concentrations[k][n] = getPower(n) * computeOmega(k,n) +
 	computeZetaHat(k,n);
     }
 
     // update the full power and reactivity vectors
-    rho[n] = computeA1(n) * power.at(n) + computeB1(n);
+    rho[n] = computeA1(n) * getPower(n) + computeB1(n);
   }
 
   return std::make_shared<EPKEOutput>(params->getTime(),

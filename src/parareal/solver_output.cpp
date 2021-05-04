@@ -99,3 +99,72 @@ void epke::EPKEOutput::writeToXML(pugi::xml_document& doc) const {
     conc_node.text() = conc_str.str().c_str();
   }
 }
+
+epke::EPKEOutput::ptr epke::operator-(const epke::EPKEOutput::ptr left,
+				      const epke::EPKEOutput::ptr right) {
+  para::timeBins power, rho;
+  para::precBins<para::timeBins> concentrations;
+
+  std::transform(left->_power.begin(),
+		 left->_power.end(),
+		 right->_power.begin(),
+		 std::back_inserter(power),
+		 std::minus<double>());
+
+  std::transform(left->_rho.begin(),
+		 left->_rho.end(),
+		 right->_rho.begin(),
+		 std::back_inserter(rho),
+		 std::minus<double>());
+
+  for (para::precIndex k = 0; k < left->getNumPrecursors(); k++) {
+    para::timeBins concentration;
+    std::transform(left->_concentrations.at(k).begin(),
+		   left->_concentrations.at(k).end(),
+		   right->_concentrations.at(k).begin(),
+		   std::back_inserter(concentration),
+		   std::minus<double>());
+
+    concentrations.push_back(concentration);
+  }
+
+  return std::make_shared<epke::EPKEOutput>(left->_time,
+					    concentrations,
+					    power,
+					    left->_rho);
+}
+
+
+epke::EPKEOutput::ptr epke::operator+(const epke::EPKEOutput::ptr left,
+				      const epke::EPKEOutput::ptr right) {
+  para::timeBins power, rho;
+  para::precBins<para::timeBins> concentrations;
+
+  std::transform(left->_power.begin(),
+		 left->_power.end(),
+		 right->_power.begin(),
+		 std::back_inserter(power),
+		 std::plus<double>());
+
+  std::transform(left->_rho.begin(),
+		 left->_rho.end(),
+		 right->_rho.begin(),
+		 std::back_inserter(rho),
+		 std::plus<double>());
+
+  for (para::precIndex k = 0; k < left->getNumPrecursors(); k++) {
+    para::timeBins concentration;
+    std::transform(left->_concentrations.at(k).begin(),
+		   left->_concentrations.at(k).end(),
+		   right->_concentrations.at(k).begin(),
+		   std::back_inserter(concentration),
+		   std::plus<double>());
+
+    concentrations.push_back(concentration);
+  }
+
+  return std::make_shared<epke::EPKEOutput>(left->_time,
+					    concentrations,
+					    power,
+					    left->_rho);
+}
