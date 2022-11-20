@@ -9,7 +9,7 @@
 namespace util {
 
 inline const para::timeBins
-loadVectorData(const pugi::xml_node& node, para::timeIndex n_steps) {
+loadVectorData(const pugi::xml_node& node, const para::timeIndex n_steps) {
   para::timeBins result;
 
   // check to see if parameter is constant in time
@@ -18,9 +18,12 @@ loadVectorData(const pugi::xml_node& node, para::timeIndex n_steps) {
   if (value) {
     result = para::timeBins(n_steps, value);
   } else {
+    result = para::timeBins(n_steps, 0.);
     std::istringstream iss(node.text().get());
+    para::timeIndex n = 0;
     for (double s; iss >> s;) {
-      result.push_back(s);
+      result[n] = s;
+      n++;
     }
   }
 
@@ -39,17 +42,19 @@ loadVectorData(const pugi::xml_node& node) {
   return result;
 }
 
-inline const para::precBins<para::timeBins> loadZetas(
-    const pugi::xml_node& histories_node) {
+inline const para::precBins<para::timeBins>
+loadZetas(const pugi::xml_node& histories_node, const para::timeIndex n_steps) {
 
   para::precBins<para::timeBins> concentration_histories;
 
   for (auto history_node : histories_node.children()) {
-    std::vector<double> concentration_history;
+    para::timeBins concentration_history(n_steps, 0.);
 
+    para::timeIndex n = 0;
     std::istringstream iss(history_node.text().get());
     for (double s; iss >> s;) {
-     concentration_history.push_back(s);
+      concentration_history[n] = s;
+      n++;
     }
 
     concentration_histories.push_back(concentration_history);

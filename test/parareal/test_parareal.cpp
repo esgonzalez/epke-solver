@@ -57,8 +57,8 @@ TEST_CASE("Test parareal functions.", "[parareal]") {
 
     // test time interpolation
     timeBins fine_time_0 = {0.0, 0.5, 1.0};
-    timeBins fine_time_1 = {0.0, 1.0, 1.5, 2.0};
-    timeBins fine_time_2 = {0.0, 1.0, 2.0, 2.5, 3.0};
+    timeBins fine_time_1 = {0.0, 0.5, 1.0, 1.5, 2.0};
+    timeBins fine_time_2 = {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0};
 
     REQUIRE(parareal.generateFineTime(0) == fine_time_0);
     REQUIRE(parareal.generateFineTime(1) == fine_time_1);

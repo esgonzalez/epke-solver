@@ -10,6 +10,7 @@ namespace para {
   using timeBins  = std::vector<double>; // binning over time variable
   using timeIndex = uint32_t;
   using precIndex = uint8_t;
+  using paraIndex = uint16_t;
 } // namespace para
 
 #endif

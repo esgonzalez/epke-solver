@@ -4,45 +4,78 @@
 #include <memory>
 
 #include "parareal/definitions.hpp"
-#include "pugi/pugixml.hpp"
+
+namespace pugi {
+  class xml_document;
+}
 
 namespace para {
 
 class SolverOutput {
 public:
-  template <typename T>
-  using precBins  = para::precBins<T>;
   using timeBins  = para::timeBins;
   using timeIndex = para::timeIndex;
-  using precIndex = para::precIndex;
   using ptr       = std::shared_ptr<SolverOutput>;
 
 protected:
-  const timeBins           _time;           // time mesh
-  const precBins<timeBins> _concentrations; // precursor concentrations
+  // Time discretization
+  timeBins _time;
+
+  // Number of precomputed values (initial conditions)
+  timeIndex _n_start;
+
+  // Index to stop solve
+  timeIndex _n_stop;
+
+  double _solve_time;
 
 public:
-  // Construct from pugixml node
-  SolverOutput(const pugi::xml_node & precomp_node);
+  // Construct empty from size
+  SolverOutput(const timeIndex num_time_steps,
+	       const timeIndex n_start,
+	       const timeIndex n_stop)
+    : _time(num_time_steps, 0.), _n_start(n_start), _n_stop(n_stop) {}
 
   // Construct from data vectors
   SolverOutput(const timeBins& time,
-	       const precBins<timeBins>& concentrations)
-    : _time(time), _concentrations(concentrations) {}
+	       const timeIndex n_start,
+	       const timeIndex n_stop)
+    : _time(time), _n_start(n_start), _n_stop(n_stop) {}
 
   // Getters
-  const timeIndex getNumTimeSteps()  const { return _time.size(); }
-  const precIndex getNumPrecursors() const { return _concentrations.size(); }
+  const timeIndex getNumTimeSteps() const { return _time.size(); }
 
-  const double getConcentration(const precIndex k, const timeIndex n) const {
-    return _concentrations.at(k).at(n);
-  }
+  const timeIndex getStartTimeIndex() const { return _n_start; }
+
+  const timeIndex getStopTimeIndex() const { return _n_stop; }
+
+  const double getTime(const timeIndex n) const { return _time[n]; }
+
+  // Set solve time
+  void setSolveTime(double solve_time) { _solve_time = solve_time; }
+
+  // Set the time at index n
+  void setTime(const timeIndex n, const double val) { _time[n] = val; }
 
   // Create output object with truncated precomputed values from coarse solver
-  virtual SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const = 0;
+  virtual SolverOutput::ptr
+  createPrecomputedImpl(const timeIndex n,
+			const timeIndex n_fine_per_coarse) const = 0;
 
   // Create output object with only information from the coarse time steps
-  virtual SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const = 0;
+  //virtual SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const = 0;
+
+  // Resize the number of time steps
+  virtual void resize(const timeIndex n_steps) = 0;
+
+  // Update the new coarse solution
+  virtual void updateCoarseImpl(const timeIndex n, ptr coarse) = 0;
+
+  // Update the solution with parareal adjustments
+  virtual void updatePararealImpl(const timeIndex n,
+				  ptr new_coarse,
+				  ptr fine_coarsened,
+				  ptr old_coarse) = 0;
 
   // Write the output to an xml document
   virtual void writeToXML(pugi::xml_document& doc) const = 0;
@@ -50,8 +83,11 @@ public:
 
   template<typename T>
   std::shared_ptr<T> createPrecomputed(std::shared_ptr<T> precomp,
-				       const timeIndex n) {
-    return std::static_pointer_cast<T>(precomp->createPrecomputedImpl(n));
+				       const timeIndex n,
+				       const timeIndex n_fine_per_coarse) {
+    return std::static_pointer_cast<T>(
+	       precomp->createPrecomputedImpl(n,
+					      n_fine_per_coarse));
   }
 
   template<typename T>
@@ -60,46 +96,25 @@ public:
     return std::static_pointer_cast<T>(fine_output->coarsenImpl(coarse_time));
   }
 
+  template<typename T>
+  void updateCoarse(const timeIndex n,
+		    std::shared_ptr<T> solution,
+		    std::shared_ptr<T> coarse) {
+    std::static_pointer_cast<T>(solution)->updateCoarseImpl(n, coarse);
+  }
+
+  template<typename T>
+  void updateParareal(const timeIndex n,
+		      std::shared_ptr<T> solution,
+		      std::shared_ptr<T> new_coarse,
+		      std::shared_ptr<T> fine_coarsened,
+		      std::shared_ptr<T> old_coarse) {
+    std::static_pointer_cast<T>(solution)->updatePararealImpl(n,
+							      new_coarse,
+							      fine_coarsened,
+							      old_coarse);
+  }
+
 } // namespace para
-
-namespace epke {
-
-class EPKEOutput : public para::SolverOutput {
-public:
-  using ptr = std::shared_ptr<EPKEOutput>;
-
-private:
-  // time-dependent parameters
-  const timeBins _power; // reactor power
-  const timeBins _rho;   // reactivity with feedback
-
-public:
-  // Construct from pugixml node
-  EPKEOutput(const pugi::xml_node& precomp_node);
-
-  // Construct from data vectors
-  EPKEOutput(const timeBins&           time,
-	     const precBins<timeBins>& concentrations,
-	     const timeBins&           power,
-	     const timeBins&           rho)
-    : SolverOutput(time, concentrations), _power(power), _rho(rho) {}
-
-  const double getPower(const timeIndex n) const { return _power.at(n); }
-  const double getRho(const timeIndex n)   const { return _rho.at(n);   }
-
-  SolverOutput::ptr createPrecomputedImpl(const timeIndex n) const override;
-
-  SolverOutput::ptr coarsenImpl(const timeBins& coarse_time) const override;
-
-  void writeToXML(pugi::xml_document& doc) const override;
-
-  friend EPKEOutput::ptr operator-(const EPKEOutput::ptr left,
-				   const EPKEOutput::ptr right);
-
-  friend EPKEOutput::ptr operator+(const EPKEOutput::ptr left,
-				   const EPKEOutput::ptr right);
-};
-
-} // namespace epke
 
 #endif

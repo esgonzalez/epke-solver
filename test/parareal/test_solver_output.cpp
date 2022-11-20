@@ -21,7 +21,7 @@ TEST_CASE("Test solver_output functions.", "[SolverOutput]") {
     timeBins fine_rho_history = {0.0, 1.0, 2.0};
     precBins<timeBins> fine_zeta_histories = {{0.5, 1.0, 1.5}};
 
-    auto precomp = createPrecomputed(output, 2);
+    auto precomp = createPrecomputed(output, 2, 1);
 
     // Check the precomputed "history" values
     for (timeIndex n = 0; n < precomp->getNumTimeSteps(); n++) {
